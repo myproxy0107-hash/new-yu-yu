@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: yu-plus
+    name: sleepy-plus
     env: python
     region: Oregon
     plan: free
