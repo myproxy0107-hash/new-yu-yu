@@ -1,815 +1,582 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="utf-8">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="robots" content="noindex,nofollow">
-    <title>勉強に集中したい！勉強への集中力をアップする方法とは？</title>
+    <title>検索</title>
     <link rel="icon" href="/img/logo/favicon.ico">
-
     <link rel="stylesheet" href="/css/pure-min.css">
     <link rel="stylesheet" href="/css/grids-responsive-min.css">
     <link rel="stylesheet" href="/css/ionicons.min.css">
     <link rel="stylesheet" href="/css/default.css">
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=thumb_up" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
     <style>
-      /* もともとのCSS（保持） */
-      :root {
-        --yt-spec-base-background: #ffffff;
-        --yt-spec-raised-background: #ffffff;
-        --yt-spec-menu-background: #ffffff;
-        --yt-spec-inverted-background: #0f0f0f;
-        --yt-spec-outline: rgba(0, 0, 0, 0.1);
-        --yt-spec-text-primary: #0f0f0f;
-        --yt-spec-text-secondary: #606060;
-        --yt-spec-red: #ff0000;
-        --yt-spec-brand-button-text: #065fd4;
-      }
-      div.thumbnail { padding: 5%; position: relative; box-sizing: border-box; }
-      body { font-family: Roboto, Arial, sans-serif; background-color: var(--yt-spec-base-background); color: var(--yt-spec-text-primary); margin: 0; padding: 0; }
-      @media (max-width: 768px) { .shorts-link span { display: none; } }
+        /* ---------- keep original searchbar layout ---------- */
+        .contents #searchbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            text-align: right;
+            z-index: 20;
+            color: #ffffff;
+        }
+        #topButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #topButton:hover { background-color: #0056b3; }
+        #topButton:active { transform: scale(0.95); background-color: #ff6347; }
 
-      .main-content { margin-top: 56px; min-height: calc(100vh - 56px); padding: 16px; }
-      .video-container { display: flex; gap: 16px; }
-      .video-left { flex: 0 0 75%; display: flex; flex-direction: column; }
-      .video-right { flex: 0 0 30%; }
-      .video-player-container { width: 100%; }
-      .video-player-wrapper { position: relative; }
-      .video-player-wrapper video { width: 100%; aspect-ratio: 16 / 9; background: #000; }
+        /* ---------- card / thumbnail visuals (non-invasive) ---------- */
+        a.dynamic-link {
+          display: block;
+          color: inherit;
+          text-decoration: none;
+          background: #fff;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+          transition: transform 180ms ease, box-shadow 180ms ease;
+          border: 1px solid rgba(0,0,0,0.05);
+        }
+        a.dynamic-link:hover, a.dynamic-link:focus {
+          transform: translateY(-6px);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+          outline: none;
+        }
+        a.dynamic-link .thumbnail {
+          position: relative;
+          background: #000;
+          height: 0;
+          padding-bottom: 56.25%;
+          overflow: hidden;
+        }
+        a.dynamic-link .thumbnail img.thumbnail {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 240ms ease;
+        }
+        a.dynamic-link:hover .thumbnail img.thumbnail { transform: scale(1.03); }
+        a.dynamic-link .length {
+          position: absolute;
+          right: 8px;
+          bottom: 8px;
+          background: rgba(0,0,0,0.75);
+          color: #fff;
+          padding: 4px 7px;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          z-index: 3;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        }
+        a.dynamic-link > p[dir="auto"] {
+          margin: 10px 12px 6px;
+          font-weight: 600;
+          color: #222;
+          font-size: 0.95rem;
+          line-height: 1.25;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+        .video-card-row.flexible {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 12px 10px;
+          gap: 8px;
+          color: #666;
+          font-size: 0.85rem;
+        }
+        .video-card-row.flexible a { color: #007BFF; text-decoration: none; font-weight: 500; }
+        .video-card-row.flexible a:hover { text-decoration: underline; }
+        .video-data { margin: 0; display: inline-block; color: #666; font-size: 0.82rem; }
 
-      /* ローダー */
-      #loader { border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 80px; height: 80px; animation: spin 1s linear infinite; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; display: none; }
-      @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        /* vc selector / status (kept minimal) */
+        #vcStatus { display: inline-block; color: #444; font-size: 0.88rem; margin-left: 10px; vertical-align: middle; }
 
-      .video-description { margin-top: 16px; background-color: #f9f9f9; padding: 12px; border-radius: 4px; text-align: left; }
-      .comments-section { margin-top: 16px; background-color: #ffffff; padding: 12px; border: 1px solid var(--yt-spec-outline); border-radius: 4px; text-align: left; }
-      .comments-section h3 { margin-top: 0; font-size: 18px; margin-bottom: 8px; }
-      .comment-item { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--yt-spec-outline); }
-      .comment-item:last-child { border-bottom: none; }
-      .comment-header { margin-bottom: 4px; }
-      .comment-author { font-weight: bold; margin-right: 8px; }
-      .comment-actions { font-size: 12px; color: var(--yt-spec-text-secondary); }
-      .recommendation { margin-bottom: 8px; }
-      .recommendation a { text-decoration: none; color: var(--yt-spec-text-primary); display: block; }
-      .thumbnail { position: relative; width: 100%; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
-      .thumbnail img { width: 100%; display: block; }
-      .length { position: absolute; bottom: 8px; right: 8px; background: rgba(0, 0, 0, 0.8); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 500; }
-      .recommendation p { margin: 4px 0 0; font-size: 14px; }
-      @media (max-width: 768px) { .video-container { display: block; } .video-right { margin-top: 16px; } }
+        /* topBar behavior */
+        #top-bar { transition: background 200ms ease, box-shadow 200ms ease; }
+        #top-bar.scrolled { background: rgba(255,255,255,0.96); box-shadow: 0 3px 12px rgba(0,0,0,0.06); }
 
-       /* トップバー */
-      #top-bar { display: flex; align-items: center; justify-content: space-between; background-color: #ffffff; height: 56px; padding: 0 15px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
-      #top-bar .left-section { display: flex; align-items: center; }
-      #open-sidebar { font-size: 30px; background: none; border: none; cursor: pointer; color: #007bff; }
+        @media (max-width: 640px) {
+          a.dynamic-link { border-radius: 6px; }
+          .pure-u-1.pure-u-md-1-4 { padding: 6px 8px; }
+          .pure-u-1.pure-u-md-12-24.searchbar { padding-right: 0; }
+        }
 
-      /* サイドバー */
-      #sidebar { position: fixed; top: 56px; left: -100%; width: 80%; max-width: 300px; height: calc(100% - 56px); background-color: #000; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); overflow-y: auto; transition: left 0.3s ease; z-index: 1100; color: #fff; }
-      #sidebar.active { left: 0; }
-      #sidebar .sidebar-content { padding: 20px; }
-      #sidebar a { display: block; margin-bottom: 10px; color: #fff; text-decoration: none; }
-      #sidebar button#close-sidebar { background: none; border: none; font-size: 24px; color: #fff; position: absolute; top: 10px; right: 10px; cursor: pointer; }
+        /* ---------- settings panel (overlay) ---------- */
+        /* gear moved to left-bottom */
+        .settings-toggle {
+          position: fixed;
+          left: 18px;
+          bottom: 18px;
+          z-index: 140;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          font-size: 20px;
+          color: #fff;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .settings-toggle .gear {
+          width: 44px;
+          height: 44px;
+          border-radius: 10px;
+          background: rgba(0,0,0,0.55);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+          color: #fff;
+          font-size: 20px;
+        }
+        .settings-panel {
+          position: fixed;
+          bottom: 78px;
+          left: 18px;
+          width: 320px;
+          max-width: calc(100% - 36px);
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+          padding: 16px;
+          z-index: 139;
+          transform-origin: bottom left;
+          transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
+          opacity: 0;
+          transform: translateY(10px) scale(.98);
+          pointer-events: none;
+        }
+        .settings-panel.open {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+          pointer-events: auto;
+        }
+        .settings-panel h4 { margin: 0 0 10px; font-size: 1rem; color: #222; }
+        .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+        .settings-row:last-child { border-bottom: none; }
+        .settings-row label { font-size: 0.92rem; color: #333; }
+        .settings-row .desc { font-size: 0.8rem; color: #666; display:block; margin-top:6px; }
 
-      /* overlay */
-      #overlay { position: fixed; top: 56px; left: 0; width: 100%; height: calc(100% - 56px); background: rgba(0, 0, 0, 0.4); opacity: 0; visibility: hidden; transition: opacity 0.3s ease; z-index: 1000; }
-      #overlay.active { opacity: 1; visibility: visible; }
+        /* ---------- toast (notification) ---------- */
+        .toast-wrap {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 150;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          pointer-events: none;
+        }
+        .toast {
+          min-width: 220px;
+          max-width: 360px;
+          background: linear-gradient(180deg,#fff,#f6f9ff);
+          border-radius: 10px;
+          padding: 12px 14px;
+          box-shadow: 0 10px 30px rgba(14,30,37,0.12);
+          color: #042a4a;
+          font-size: 0.95rem;
+          border-left: 4px solid #007BFF;
+          transform: translateX(12px) translateY(-8px) scale(.98);
+          opacity: 0;
+          transition: transform 300ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease;
+          pointer-events: auto;
+          touch-action: pan-y;
+          user-select: none;
+        }
+        .toast.show { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
+        .toast .title { font-weight: 700; margin-bottom: 6px; }
+        .toast .body { font-weight: 500; color: #234; }
+        .toast.dragging { transition: none; opacity: 0.95; }
+        .toast .close-x { position: absolute; top: 6px; right: 8px; font-weight: 700; color: rgba(0,0,0,0.45); cursor: pointer; }
+        .toast .hint { margin-top: 8px; font-size: 0.78rem; color: #556; display:block; }
 
-      #sidebar .sidebar-content > * { border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 0; margin: 0; }
-      #sidebar .sidebar-content > *:last-child { border-bottom: none; }
-
-      /* ---------- 追加: 歯車・設定パネル・トースト（左下・右上） ---------- */
-
-      .settings-toggle {
-        position: fixed;
-        left: 18px;
-        bottom: 18px;
-        z-index: 140;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        font-size: 20px;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0;
-      }
-      .settings-toggle .gear {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        background: rgba(0,0,0,0.55);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-        color: #fff;
-        font-size: 20px;
-      }
-
-      .settings-panel {
-        position: fixed;
-        bottom: 78px;
-        left: 18px;
-        width: 320px;
-        max-width: calc(100% - 36px);
-        background: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 14px 40px rgba(0,0,0,0.18);
-        padding: 16px;
-        z-index: 139;
-        transform-origin: bottom left;
-        transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
-        opacity: 0;
-        transform: translateY(10px) scale(.98);
-        pointer-events: none;
-      }
-      .settings-panel.open { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
-      .settings-panel h4 { margin: 0 0 10px; font-size: 1rem; color: #222; }
-      .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
-      .settings-row:last-child { border-bottom: none; }
-      .settings-row label { font-size: 0.92rem; color: #333; }
-      .settings-row .desc { font-size: 0.8rem; color: #666; display:block; margin-top:6px; }
-
-      .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 150; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-      .toast {
-        min-width: 220px;
-        max-width: 360px;
-        background: linear-gradient(180deg,#fff,#f6f9ff);
-        border-radius: 10px;
-        padding: 12px 14px;
-        box-shadow: 0 10px 30px rgba(14,30,37,0.12);
-        color: #042a4a;
-        font-size: 0.95rem;
-        border-left: 4px solid #007BFF;
-        transform: translateX(12px) translateY(-8px) scale(.98);
-        opacity: 0;
-        transition: transform 300ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease;
-        pointer-events: auto;
-        touch-action: pan-y;
-        user-select: none;
-        position: relative;
-      }
-      .toast.show { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
-      .toast .title { font-weight: 700; margin-bottom: 6px; }
-      .toast .body { font-weight: 500; color: #234; }
-      .toast.dragging { transition: none; opacity: 0.95; }
-      .toast .close-x { position: absolute; top: 6px; right: 8px; font-weight: 700; color: rgba(0,0,0,0.45); cursor: pointer; }
-      .toast .hint { margin-top: 8px; font-size: 0.78rem; color: #556; display:block; }
-
-      /* ---------- 右下 もっと読み込む（FAB） ---------- */
-      .load-more-fab {
-        position: fixed;
-        right: 18px;
-        bottom: 18px;
-        z-index: 145;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 14px 18px;
-        border-radius: 14px;
-        background: linear-gradient(180deg,#0b84ff,#0666d6);
-        color: #fff;
-        font-weight: 700;
-        font-size: 15px;
-        box-shadow: 0 10px 30px rgba(6,50,120,0.22);
-        border: none;
-        cursor: pointer;
-        transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-      }
-      .load-more-fab .icon { width: 22px; height: 22px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; background: rgba(255,255,255,0.08); }
-      .load-more-fab:active { transform: translateY(2px) scale(.99); }
-      .load-more-fab[disabled] { opacity: 0.6; cursor: default; pointer-events: none; }
-
-      @media (max-width: 640px) {
-        .settings-toggle .gear { width: 40px; height: 40px; }
-        .settings-panel { width: calc(100% - 36px); left: 18px; right: 18px; }
-        .load-more-fab { padding: 12px 14px; right: 12px; bottom: 12px; font-size: 14px; }
-      }
     </style>
-
-    <!-- Font Awesome（アイコン用） -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-  </head>
-  
-  <body>
- <!-- トップバー -->
-    <header id="top-bar">
-      <div class="left-section">
-        <button id="open-sidebar">☰</button>
-        <div class="navbar-logo">
-          <a href="/"><img src="/img/logo/th.png" alt="Logo"></a>
-        </div>
-      </div>
-     <div class="search-container">
-        <form class="pure-form" action="/search" method="get">
-          <fieldset>
-            <input id="searchbox" name="q" type="search" placeholder="検索" title="検索" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false">
-          </fieldset>
-        </form>
-      </div>
-      <nav id="top-nav">
-        <a href="/bbs">掲示板</a>
-        <a href="/proxypage">Proxy</a>
-        <a href="/others">その他</a>
-        <a href="/sitsumon">回答よろ</a>
-      </nav>
-    </header>
-
-    <!-- サイドバー -->
-    <div id="sidebar">
-      <button id="close-sidebar">×</button>
-      <div class="sidebar-content">
-        <a href="{{ videourls[0] }}" download="{{ video_title }}">ダウンロード</a>
-        <a href="javascript:togglePlayer(false);">デフォルトで視聴する</a>
-        <a href="javascript:togglePlayer(true);">埋め込み(nocookie)で視聴する</a>
-        <a href="javascript:location.replace('/w?v={{ videoid }}')">高画質で視聴する</a>
-        <a href="javascript:location.replace('/history')">履歴を閲覧</a>
-        <label for="autonextpage">
-          自動で次の動画に遷移
-          <input id="autonextpage" type="checkbox" onchange="changeAutoNextPage(this)">
-        </label>
-          <br>
-        <label for="loop">
-          ループ再生
-          <input id="loop" type="checkbox" onchange="changeLoop(this)">
-        </label>
-      </div>
+</head>
+<body>
+<header id="top-bar">
+    <div class="navbar-logo">
+      <a href="/"><img src="/img/logo/th.png" alt="Logo"></a>
     </div>
+    <div id="hamburger">&#9776;</div>
+    <nav id="top-nav">
+      <a href="/bbs">掲示板</a>
+      <a href="/proxypage">Proxy</a>
+      <a href="/others">その他</a>
+      <a href="/sitsumon">回答よろ</a>
+    </nav>
+</header>
 
-    <!-- オーバーレイ -->
-    <div id="overlay"></div>
+<!-- Settings toggle (gear) moved to left-bottom -->
+<button class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
+  <span class="gear">設定⚙️</span>
+</button>
 
-    <!-- 歯車ボタン（左下） -->
-    <button class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
-      <span class="gear">⚙️</span>
-    </button>
+<!-- Settings panel (appears above gear) -->
+<div class="settings-panel" id="settingsPanel" role="dialog" aria-hidden="true" aria-labelledby="settingsTitle">
+  <h4 id="settingsTitle">表示と再生の設定</h4>
 
-    <!-- 設定パネル（歯車の上に立ち上がる） -->
-    <div class="settings-panel" id="settingsPanel" role="dialog" aria-hidden="true" aria-labelledby="settingsTitle">
-      <h4 id="settingsTitle">表示と再生の設定</h4>
-
-      <div class="settings-row">
-        <div>
-          <label for="vcSelectPanel">再生モード</label>
-          <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
-        </div>
-        <div>
-          <select id="vcSelectPanel" style="min-width:120px;">
-            <option value="0">/watch (フルパス)</option>
-            <option value="1">/w (短縮)</option>
-            <option value="2">/ume (埋め込み)</option>
-            <option value="3">/edu (別モード)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="settings-row">
-        <div>
-          <label for="proxyToggle">サムネイルプロキシ</label>
-          <div class="desc">プロキシによるサムネイル取得をオンにします（クッキーで保存）</div>
-        </div>
-        <div>
-          <input id="proxyToggle" type="checkbox" />
-        </div>
-      </div>
-
-      <div style="padding-top:10px; text-align:right;">
-        <button id="settingsSaveBtn" style="padding:8px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#007BFF; color:#fff; cursor:pointer;">保存</button>
-      </div>
+  <div class="settings-row">
+    <div>
+      <label for="vcSelectPanel">再生モード</label>
+      <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
     </div>
-
-    <div class="no-theme">
-      <!-- メインコンテンツ -->
-      <main class="main-content">
-        <div class="video-container">
-          <!-- 左カラム：動画プレーヤーとその下に動画説明、コメント -->
-          <div class="video-left">
-            <div class="video-player-container">
-  <div id="defaultPlayer" class="video-player-wrapper">
-    <video id="player" controls playsinline preload="none">
-      {% for videourl in videourls %}
-        <source class="player-source" src="{{ videourl }}">
-      {% endfor %}
-    </video>
-    <div id="loader"></div>
+    <div>
+      <select id="vcSelectPanel" style="min-width:120px;">
+        <option value="0">/watch (フルパス)</option>
+        <option value="1">/w (短縮)</option>
+        <option value="2">/ume (埋め込み)</option>
+        <option value="3">/edu (別モード)</option>
+      </select>
+    </div>
   </div>
-  <div id="embeddedPlayer" class="umev" style="display: none;">
-    <iframe width="100%" height="100%" 
-            src="https://www.youtube-nocookie.com/embed/{{ videoid }}" 
-            title="video player" frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            referrerpolicy="strict-origin-when-cross-origin" 
-            allowfullscreen>
-    </iframe>
+
+  <div class="settings-row">
+    <div>
+      <label for="proxyToggle">サムネイルプロキシ</label>
+      <div class="desc">プロキシによるサムネイル取得をオンにします（クッキーで保存）</div>
+    </div>
+    <div>
+      <input id="proxyToggle" type="checkbox" />
+    </div>
+  </div>
+
+  <div style="padding-top:10px; text-align:right;">
+    <button id="settingsSaveBtn" style="padding:8px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#007BFF; color:#fff; cursor:pointer;">保存</button>
   </div>
 </div>
 
-<script>
-  // 切り替え用の関数
-  function togglePlayer(isEmbedded) {
-    const defaultPlayer = document.getElementById("defaultPlayer");
-    const embeddedPlayer = document.getElementById("embeddedPlayer");
-    if (isEmbedded) {
-      defaultPlayer.style.display = "none";
-      embeddedPlayer.style.display = "block";
-    } else {
-      defaultPlayer.style.display = "block";
-      embeddedPlayer.style.display = "none";
-    }
-  }
-</script>
+<br>
 
-            <!-- 動画の説明 -->
-            <div class="video-description" id="descriptionText">
-              <a href="/channel/{{ author_id }}" style="display: inline-block; width: fit-content; width: -moz-fit-content">
-            <div class="channel-profile">
+<div class="no-theme">
+    <span id="dark_mode_pref" style="display: none;"></span>
+    <div class="pure-g">
+        <div class="pure-u-1 pure-u-md-2-24"></div>
 
-              <img src="{{ author_icon }}">
-
-              <span id="channel-name">{{ author }}</span>
-            </div>
-        </a>
-              <h1>{{ video_title }}</h1>
-              <p style="display: inline-block; margin-right: 10px; vertical-align: super;">{{ view_count }}回視聴</p>
-              <div style="display: inline-block;">
-                <span class="material-symbols-outlined" style="display: inline-block; padding-right: 5px;">thumb_up</span>
-                <p style="display: inline-block; vertical-align: super;">{{ like_count }}</p>
-              </div><br>
-              {{ description | safe }}
-            </div>
-            <!-- コメントエリア -->
-            <div class="comments-section">
-              <h3>コメント</h3>
-              <div id="comments"></div>
-            </div>
-          </div>
-          <!-- 右カラム：関連動画 -->
-          <div class="video-right">
-            {% for rec_video in recommended_videos %}
-            <div class="recommendation">
-              <a href="/watch?v={{ rec_video['video_id'] }}">
-                <div class="thumbnail">
-                  <img loading="lazy" src="{% if proxy == 'True' %}/thumbnail?v={{ rec_video['video_id'] }}{% else %}https://img.youtube.com/vi/{{ rec_video['video_id'] }}/0.jpg{% endif %}" alt="{{ rec_video['title'] }}">
-                  <span class="length">{{ rec_video["length_text"] }}</span>
+        <div id="contents" class="pure-u-1 pure-u-md-20-24">
+            <div class="pure-g navbar h-box">
+                <div class="pure-u-1 pure-u-md-12-24 searchbar">
+                    <form class="pure-form" action="/search" method="get">
+                        <fieldset>
+                            <input id="searchbox" name="q" type="search" placeholder="検索" value="{{ word }}" title="検索" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false">
+                        </fieldset>
+                    </form>
                 </div>
-                <p>{{ rec_video["title"] }}</p>
-              </a>
-              <p>{{ rec_video["view_count_text"] }}回視聴</p>
-              <a href="/channel/{{ rec_video['authorId'] }}">{{ rec_video["author"] }}</a>
+                <!-- searchbar restored to original; no selector next to it -->
             </div>
-            {% endfor %}
-          </div>
+
+            <div class="pure-g">
+                {% for result in results %}
+                <div class="pure-u-1 pure-u-md-1-4" style="padding:10px;">
+                    <div class="h-box">
+                        {% if result["type"] == "video" %}
+                        <a class="dynamic-link" href="{{ '/w' if vc == '1' else ('/ume' if vc == '2' else ('/edu' if vc == '3' else '/watch')) }}?v={{ result['id'] }}" style="width:100%">
+                            <div class="thumbnail">
+                                <img class="thumbnail" loading="lazy"
+                                     src="{% if proxy == 'True' %}/thumbnail?v={{ result['id'] }}{% else %}https://img.youtube.com/vi/{{ result['id'] }}/0.jpg{% endif %}"
+                                     onerror="document.cookie = 'proxy=True;max-age=2592000;';">
+                                <p class="length">{{ result["length"] }}</p>
+                            </div>
+                            <p dir="auto">{{ result['title'] }}</p>
+                        </a>
+
+                        <div class="video-card-row flexible">
+                            <a href="/channel/{{ result['authorId'] }}">{{ result["author"] }}</a>
+                        </div>
+
+                        <div class="video-card-row flexible">
+                            <div class="flex-left">
+                                <p class="video-data" dir="auto">{{ result["view_count_text"] }}</p>
+                                <p class="video-data" dir="auto">{{ result["published"] }}</p>
+                            </div>
+                        </div>
+
+                        {% elif result["type"] == "channel" %}
+                        <a href="/channel/{{ result["id"] }}">
+                            <center>
+                                <img loading="lazy" tabindex="-1" style="width:56.25%" src="{{ result["thumbnail"] }}">
+                            </center>
+                            <p dir="auto">{{ result["author"] }}</p>
+                        </a>
+
+                        {% elif result["type"] == "playlist" %}
+                        <a class="dynamic-link" style="width: 100%;" href="{{ '/w' if vc == '1' else ('/ume' if vc == '2' else ('/edu' if vc == '3' else '/watch')) }}?v={{ result['id'] }}">
+                            <div class="thumbnail">
+                                <img loading="lazy" tabindex="-1" class="thumbnail" src="{{ result['thumbnail'] }}">
+                                <p class="length">{{ result["count"] }}個の動画</p>
+                            </div>
+                            <p dir="auto">{{ result["title"] }}</p>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-      </main>
     </div>
 
-    <!-- Toast container -->
-    <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+    <div class="pure-g h-box">
+        <div class="pure-u-1 pure-u-lg-1-5"></div>
+    </div>
 
-    <!-- Load more FAB (right-bottom) -->
-    <button id="loadMoreFab" class="load-more-fab" aria-label="もっと読み込む">
-      <span class="icon">＋</span>
-      <span class="text">もっと読み込む</span>
-    </button>
+    <div class="pure-u-1 pure-u-lg-3-5"></div>
+    <div class="pure-u-1 pure-u-lg-1-5" style="text-align:right">
+        <a href="{{ next }}">次のページ</a>
+    </div>
+</div>
 
-    <script>
-      const video = document.getElementById("player");
-      const loader = document.getElementById("loader");
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
 
-      // ユーザーが「再生」をクリックしたとき、video.currentTime が 0 なら loader を表示
-      if (video) {
-        video.addEventListener("play", () => {
-          if (video.currentTime === 0) {
-            loader.style.display = "block";
-          }
-        });
+<script>
+/* ---------- cookie helpers ---------- */
+function getCookie(name) {
+  const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return v ? decodeURIComponent(v.pop()) : null;
+}
+function setCookie(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (days||30) * 24 * 60 * 60 * 1000);
+  const expires = "expires=" + d.toUTCString();
+  document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+}
 
-        // 動画の再生が進んだら loader を非表示にする処理
-        function checkVideoTime() {
-          if (video.currentTime > 0) {
-            loader.style.display = "none";
-            video.removeEventListener("timeupdate", checkVideoTime);
-            video.removeEventListener("playing", checkVideoTime);
-          }
-        }
-        video.addEventListener("timeupdate", checkVideoTime);
-        video.addEventListener("playing", checkVideoTime);
-      }
-</script>
+/* ---------- vc path helper ---------- */
+function vcToPath(vc) {
+  switch(vc) {
+    case '1': return '/w';
+    case '2': return '/ume';
+    case '3': return '/edu';
+    default:  return '/watch';
+  }
+}
 
+/* ---------- link rewriting ---------- */
+function applyVcToLinks(vc) {
+  const targetPath = vcToPath(vc);
+  const links = document.querySelectorAll('a.dynamic-link');
+  links.forEach(a => {
+    try {
+      const url = new URL(a.getAttribute('href'), window.location.origin);
+      url.pathname = targetPath;
+      a.setAttribute('href', url.pathname + url.search);
+    } catch (e) {
+      let href = a.getAttribute('href') || '';
+      const idx = href.indexOf('?');
+      const query = idx >= 0 ? href.slice(idx) : '';
+      a.setAttribute('href', targetPath + query);
+    }
+  });
+  const st = document.getElementById('vcStatus');
+  if (st) {
+    let label = '';
+    switch(vc) {
+      case '1': label = '現在: 短縮パス /w'; break;
+      case '2': label = '現在: 埋め込み /ume'; break;
+      case '3': label = '現在: 別モード /edu'; break;
+      default:  label = '現在: フルパス /watch';
+    }
+    st.textContent = label;
+  }
+}
 
-    <script>
-  const openSidebar = document.getElementById("open-sidebar");
-  const closeSidebar = document.getElementById("close-sidebar");
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.getElementById("overlay");
+/* ---------- DOM init ---------- */
+document.addEventListener('DOMContentLoaded', function() {
+  const serverVc = '{{ vc }}';
+  const cookieVc = getCookie('vc');
+  const vc = cookieVc !== null ? cookieVc : (serverVc || '0');
+  if (cookieVc === null) setCookie('vc', vc, 30);
 
-  openSidebar.addEventListener("click", () => {
-    sidebar.classList.add("active");
-    overlay.classList.add("active");
+  // apply initial links
+  applyVcToLinks(vc);
+
+  // settings elements
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+  const proxyToggle = document.getElementById('proxyToggle');
+  const vcSelectPanel = document.getElementById('vcSelectPanel');
+
+  // sync panel controls from cookies
+  if (vcSelectPanel) vcSelectPanel.value = vc;
+  const proxyCookie = getCookie('proxy') || ( '{{ proxy }}' === 'True' ? 'True' : null );
+  if (proxyCookie === 'True') proxyToggle.checked = true;
+
+  function openSettings() {
+    settingsPanel.classList.add('open');
+    settingsPanel.setAttribute('aria-hidden', 'false');
+  }
+  function closeSettings() {
+    settingsPanel.classList.remove('open');
+    settingsPanel.setAttribute('aria-hidden', 'true');
+  }
+
+  settingsToggle.addEventListener('click', function(e){
+    e.stopPropagation();
+    if (settingsPanel.classList.contains('open')) closeSettings();
+    else openSettings();
   });
 
-  const closeSidebarFunc = () => {
-    sidebar.classList.remove("active");
-    overlay.classList.remove("active");
-  };
+  document.addEventListener('click', function(e){
+    if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) closeSettings();
+  });
 
-  closeSidebar.addEventListener("click", closeSidebarFunc);
-  overlay.addEventListener("click", closeSidebarFunc);
-</script>
+  settingsSaveBtn.addEventListener('click', function(){
+    const newVc = vcSelectPanel.value;
+    setCookie('vc', newVc, 30);
+    applyVcToLinks(newVc);
+    if (proxyToggle.checked) setCookie('proxy', 'True', 30);
+    else setCookie('proxy', 'False', 30);
+    showToast('設定を保存しました!!');
+    closeSettings();
+  });
 
-    <!-- 以降はその他の既存JS -->
-    <script>
-      const xhr = new XMLHttpRequest();
-      xhr.open("GET", "/comments?v=" + getQueryValue('v'));
-      xhr.onload = function () {
-        if (xhr.status == 200) {
-          const comments_div = document.getElementById('comments');
-          comments_div.innerHTML = xhr.responseText;
-          const comments_a_tags = comments_div.getElementsByTagName('a');
-          for(let i = 0; i < comments_a_tags.length; i++) {
-            const jump_time = comments_a_tags[i].getAttribute('data-jump-time')
-            if(jump_time) {
-              comments_a_tags[i].addEventListener('click', function(e) {
-                e.preventDefault();
-                player.currentTime = jump_time;
-              });
-            }
-          }
-        } else {
-          document.getElementById('comments').innerHTML = "コメントの読み込みに失敗しました。再読み込み等をお試し下さい。";
-        }
+  if (vcSelectPanel) {
+    vcSelectPanel.addEventListener('change', function(e){
+      const val = e.target.value;
+      const headerSel = document.getElementById('vcSelect');
+      if (headerSel) headerSel.value = val;
+    });
+  }
+
+  // autocomplete and header behaviour
+  $('#searchbox').autocomplete({
+    source: function (request, response) {
+      var url = "/suggest?keyword=" + request.term;
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url);
+      xhr.onload = function() {
+        try { response(JSON.parse(xhr.responseText)); } catch(e) { response([]); }
       };
       xhr.send();
+    }, delay: 300
+  });
 
-      let player = document.getElementById("player");
-      document.cookie = "yuki=True; path=/; max-age=10800;";
+  $("#hamburger").click(function() { $("#top-nav").toggleClass("show"); });
+  $(window).on("scroll", function() {
+    if($(window).scrollTop() > 50) { $("#top-bar").addClass("scrolled"); }
+    else { $("#top-bar").removeClass("scrolled"); }
+  });
+});
 
-      const haveLoopCookie = getCookie("loop") === 'true' ? true : false;
-      if (player) player.loop = haveLoopCookie;
-      const loopEl = document.getElementById("loop");
-      if (loopEl) loopEl.checked = haveLoopCookie;
-      const autoEl = document.getElementById("autonextpage");
-      if (autoEl) autoEl.checked = getCookie("autonextpage") === 'true' ? true : false;
+/* ---------- Toast implementation (右上表示・左から右にスライドで閉じる) ---------- */
+(function(){
+  const wrap = document.getElementById('toastWrap');
+  if (!wrap) return;
 
-      function changeAutoNextPage(checkbox) {
-        document.cookie =  `autonextpage=${checkbox.checked}; path=/; max-age=10800;`;
+  function createToast(title, body, ttl = 4200) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = '<div class="close-x" aria-hidden="true">✕</div>' +
+                   '<div class="title">' + (title || '') + '</div>' +
+                   '<div class="body">' + (body || '') + '</div>' +
+                   '<span class="hint">左から右へスライドで閉じる</span>';
+    wrap.appendChild(el);
+    requestAnimationFrame(()=> el.classList.add('show') );
+
+    const timeoutId = setTimeout(()=> dismiss(el), ttl);
+
+    el.querySelector('.close-x').addEventListener('click', function(e){
+      e.stopPropagation();
+      clearTimeout(timeoutId);
+      dismiss(el);
+    });
+
+    let startX = 0;
+    let currentX = 0;
+    let dragging = false;
+
+    function onPointerDown(ev) {
+      dragging = true;
+      el.classList.add('dragging');
+      startX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+      currentX = startX;
+      el.style.transition = 'none';
+    }
+    function onPointerMove(ev) {
+      if (!dragging) return;
+      const clientX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+      currentX = clientX;
+      const dx = currentX - startX;
+      // only allow left->right (positive) visual
+      el.style.transform = `translateX(${Math.max(0, dx)}px)`;
+      el.style.opacity = String(Math.max(0, 1 - Math.abs(dx) / 300));
+    }
+    function onPointerUp(ev) {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      el.style.transition = '';
+      const dx = currentX - startX;
+      if (dx > 120) dismiss(el);
+      else {
+        el.style.transform = '';
+        el.style.opacity = '';
       }
-      
-      function autoNextPage() {
-        const enable_autoNextPage = document.getElementById('autonextpage') && document.getElementById('autonextpage').checked;
-        document.cookie = `autonextpage=${enable_autoNextPage}; max-age=10800;`;
-        if (enable_autoNextPage) {
-          setTimeout(() => {
-            location.replace("/watch?v={{ recommended_videos[0]['video_id'] }}");
-          }, 5000);
-        }
-      }
-      if (player) player.addEventListener('ended', autoNextPage);
-      
-      function changeLoop(checkbox) {
-        const enable_loop = checkbox.checked;
-        if (document.getElementById("player")) document.getElementById("player").loop = enable_loop;
-        document.cookie = `loop=${enable_loop}; path=/; max-age=10800;`;
-      }
-      
-      if (document.getElementById("player")) document.getElementById("player").currentTime = getQueryValue('t') || 0;
-      
-      function keydown(key) {
-        if (key.keyCode == 32 || key.keyCode == 75) {
-          const v = document.getElementById("player");
-          if (v.paused === true) {
-            v.play();
-          } else {
-            v.pause();
-          }
-        }
-      }
-      window.addEventListener('keydown', keydown);
-      
-      (function safeDescriptionBind() {
-        const descWrapper = document.getElementById('descriptionWrapper');
-        if (!descWrapper) return;
-        const description_a_tags = descWrapper.getElementsByTagName('a');
-        for(let i = 0; i < description_a_tags.length; i++) {
-          const jump_time = description_a_tags[i].getAttribute('data-jump-time')
-          if(jump_time) {
-            description_a_tags[i].addEventListener('click', function(e) {
-              e.preventDefault();
-              player.currentTime = jump_time;
-            });
-          }
-        }
-      })();
-      
-      if (player) player.style.maxHeight = document.documentElement.clientHeight * 0.8 + "px";
-      
-      let info = document.getElementById('video_info');
-      if (!info) info = document.createElement('div');
-      let reload_button_elm = document.createElement('button');
-      reload_button_elm.setAttribute('onclick', 'location.replace(location.href);');
-      reload_button_elm.innerHTML = 'リロード';
-      
-      setTimeout(() => {
-        if(player && player.networkState === 3){
-          let update_api_xhr = new XMLHttpRequest();
-          update_api_xhr.open("GET", "/api/video/next"); 
-          update_api_xhr.send();
-          
-          info.innerHTML = '動画の読み込みに失敗しました。再読み込み等をお試し下さい。<br>';
-          info.innerHTML += '過度な再読み込みはインスタンスに負荷がかかり、短期間で使用不能に陥ることや、動画等の読み込みが出来なくなることが考えられますのでご遠慮下さい。';
-          if (player && player.after) player.after(reload_button_elm);
-          if (player && player.after) player.after(info);
-          if (player) player.remove();
-        }
-      }, 1000);
-      
-      (function updateDisplayCurrentTime() {
-        setTimeout(() => {
-          const player = document.getElementById('player');
-          const current_time_elem = document.getElementById('player_current_time');
-          if(player && current_time_elem) {
-            current_time_elem.textContent = secToHMS(player.currentTime | 0);
-          }
-          updateDisplayCurrentTime();
-        }, 100);
-      })();
-    </script>
+    }
 
-    <script>
-      $('#searchbox').autocomplete({
-        source: function (request, response) {
-          const url = "/suggest?keyword=" + request.term;
-          const xhr = new XMLHttpRequest();
-          xhr.open("GET", url);
-          xhr.onload = function () { response(JSON.parse(xhr.responseText)); }
-          xhr.send();
-        },
-        delay: 300
-      });
-    </script>
-    
-    <div class="latest-info" id="latestInfo">
-      <h3>welcome!!</h3>
-      <div id="infoContent">
-        chatにきてください‼︎「その他」のところにあります‼︎
-      </div>
-    </div>
-    
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const infoContent = document.getElementById("infoContent");
-        let toggle = true;
-        setInterval(() => {
-          infoContent.textContent = toggle ? "高画質機能追加！左にある高画質再生を押してみて‼︎" : "chatにきてください‼︎「その他」のところにあります‼︎";
-          toggle = !toggle;
-        }, 5000);
-      });
-    </script>
-    
-    <!-- 動画視聴ページ用の履歴登録スクリプト -->
-    <script>
-      function addToHistory() {
-        const videoData = {
-          video_id: "{{ videoid }}",
-          thumbnail: "{% if proxy == 'True' %}/thumbnail?v={{ videoid }}{% else %}https://img.youtube.com/vi/{{ videoid }}/0.jpg{% endif %}",
-          length: "{{ length_text }}",
-          title: "{{ video_title }}",
-          channel: "{{ author }}",
-          channel_id: "{{ author_id }}",
-          view_count: "{{ view_count }}",
-          published: "{{ published_date }}"
-        };
-        let history = localStorage.getItem('watchHistory');
-        history = history ? JSON.parse(history) : [];
-        history = history.filter(item => item.video_id !== videoData.video_id);
-        history.unshift(videoData);
-        if (history.length > 50) {
-          history = history.slice(0, 50);
-        }
-        localStorage.setItem('watchHistory', JSON.stringify(history));
-      }
-      window.addEventListener('load', addToHistory);
-    </script>
+    el.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+    el.addEventListener('touchstart', onPointerDown, {passive:true});
+    window.addEventListener('touchmove', onPointerMove, {passive:true});
+    window.addEventListener('touchend', onPointerUp);
 
-    <!-- 設定パネル / トースト / applyVcToLinks / LoadMore 統合スクリプト -->
-    <script>
-      /* cookie helpers */
-      function getCookie(name) {
-        const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-        return v ? decodeURIComponent(v.pop()) : null;
-      }
-      function setCookie(name, value, days) {
-        const d = new Date();
-        d.setTime(d.getTime() + (days||30) * 24 * 60 * 60 * 1000);
-        const expires = "expires=" + d.toUTCString();
-        document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
-      }
+    return el;
+  }
 
-      /* vc -> path helper */
-      function vcToPath(vc) {
-        switch(String(vc)) {
-          case '1': return '/w';
-          case '2': return '/ume';
-          case '3': return '/edu';
-          default:  return '/watch';
-        }
-      }
+  function dismiss(el) {
+    if (!el) return;
+    el.classList.remove('show');
+    el.style.transform = 'translateX(14px) translateY(-8px) scale(.98)';
+    el.style.opacity = '0';
+    setTimeout(()=> { try { el.remove(); } catch(e) {} }, 260);
+  }
 
-      /* applyVcToLinks: href のみ書き換える（表示は変えない） */
-      function applyVcToLinks(vc) {
-        const resolvedVc = String(vc !== undefined && vc !== null ? vc : (getCookie('vc') || '0'));
-        const targetPath = vcToPath(resolvedVc);
+  window.showToast = function(message, title) {
+    createToast(title || '通知', message || '', 4200);
+  };
+})();
 
-        const selectors = [
-          'a.dynamic-link',
-          'a.recommendation-link',
-          'a[href^="/watch"]',
-          'a[href^="/w"]',
-          'a[href^="/ume"]',
-          'a[href^="/edu"]'
-        ];
-
-        const nodeSet = new Set();
-        selectors.forEach(sel => {
-          try { document.querySelectorAll(sel).forEach(el => nodeSet.add(el)); }
-          catch(e) { /* ignore */ }
-        });
-
-        nodeSet.forEach(a => {
-          try {
-            const originalHref = a.getAttribute('href') || '';
-            try {
-              const url = new URL(originalHref, window.location.origin);
-              const search = url.search || '';
-              url.pathname = targetPath;
-              a.setAttribute('href', url.pathname + search);
-            } catch (e) {
-              const idx = originalHref.indexOf('?');
-              const query = idx >= 0 ? originalHref.slice(idx) : '';
-              a.setAttribute('href', targetPath + query);
-            }
-          } catch (err) {
-            console.warn('applyVcToLinks skipped element', a, err);
-          }
-        });
-
-        const st = document.getElementById('vcStatus');
-        if (st) {
-          let label = '';
-          switch(targetPath) {
-            case '/w': label = '現在: 短縮パス /w'; break;
-            case '/ume': label = '現在: 埋め込み /ume'; break;
-            case '/edu': label = '現在: 別モード /edu'; break;
-            default: label = '現在: フルパス /watch';
-          }
-          st.textContent = label;
-        }
-      }
-
-      /* video ページのアドレスバーを即時書き換える */
-      function updateCurrentVideoUrlPath(vc) {
-        const currentPath = window.location.pathname || '';
-        const isVideoPage = /^\/(watch|w|ume|edu)$/.test(currentPath);
-        if (!isVideoPage) return;
-        const query = window.location.search || '';
-        const newPath = vcToPath(vc) + query;
-        try {
-          history.replaceState(history.state, document.title, newPath);
-        } catch(e) {
-          console.warn('history.replaceState failed', e);
-        }
-      }
-
-      /* setVcAndApply: 保存時に呼ぶユーティリティ */
-      function setVcAndApply(newVc) {
-        newVc = String(newVc);
-        setCookie('vc', newVc, 30);
-        applyVcToLinks(newVc);
-        updateCurrentVideoUrlPath(newVc);
-        if (typeof showToast === 'function') {
-          const modeLabel = (newVc === '1' ? '/w' : (newVc === '2' ? '/ume' : (newVc === '3' ? '/edu' : '/watch')));
-          showToast(modeLabel + ' に変更しました!!', '変更完了');
-        } else {
-          console.info('vc changed to', newVc);
-        }
-      }
-
-      /* DOMContentLoaded 初期化 */
-      document.addEventListener('DOMContentLoaded', function() {
-        const cookieVc = getCookie('vc');
-        const initialVc = cookieVc !== null ? cookieVc : ('{{ vc }}' || '0');
-        applyVcToLinks(initialVc);
-
-        // settings panel 初期化
-        const settingsToggle = document.getElementById('settingsToggle');
-        const settingsPanel = document.getElementById('settingsPanel');
-        const settingsSaveBtn = document.getElementById('settingsSaveBtn');
-        const proxyToggle = document.getElementById('proxyToggle');
-        const vcSelectPanel = document.getElementById('vcSelectPanel');
-
-        if (vcSelectPanel) vcSelectPanel.value = initialVc;
-        const proxyCookie = getCookie('proxy') || ( '{{ proxy }}' === 'True' ? 'True' : 'False' );
-        if (proxyToggle) proxyToggle.checked = proxyCookie === 'True';
-
-        function openSettings() { settingsPanel.classList.add('open'); settingsPanel.setAttribute('aria-hidden','false'); }
-        function closeSettings() { settingsPanel.classList.remove('open'); settingsPanel.setAttribute('aria-hidden','true'); }
-
-        settingsToggle.addEventListener('click', function(e){
-          e.stopPropagation();
-          if (settingsPanel.classList.contains('open')) closeSettings(); else openSettings();
-        });
-
-        document.addEventListener('click', function(e){
-          if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) closeSettings();
-        });
-
-        settingsSaveBtn.addEventListener('click', function(){
-          const newVc = vcSelectPanel.value;
-          if (proxyToggle.checked) setCookie('proxy', 'True', 30); else setCookie('proxy', 'False', 30);
-
-          // 即時反映（リンク書換 + video URL 書換 + トースト）
-          setVcAndApply(newVc);
-
-          closeSettings();
-        });
-      });
-
-      /* シンプルトースト（重複抑制無し） */
-      (function(){
-        const wrap = document.getElementById('toastWrap');
-        if (!wrap) return;
-
-        function createToast(title, body, ttl = 4200) {
-          const el = document.createElement('div');
-          el.className = 'toast';
-          el.innerHTML = '<div class="close-x" aria-hidden="true">✕</div>' +
-                         '<div class="title">' + (title || '') + '</div>' +
-                         '<div class="body">' + (body || '') + '</div>' +
-                         '<span class="hint">左から右へスライドで閉じる</span>';
-          wrap.appendChild(el);
-          requestAnimationFrame(()=> el.classList.add('show') );
-          const timeoutId = setTimeout(()=> dismiss(el), ttl);
-          el._toastTimeoutId = timeoutId;
-          const closeX = el.querySelector('.close-x');
-          if (closeX) closeX.addEventListener('click', function(e){ e.stopPropagation(); clearTimeout(el._toastTimeoutId); dismiss(el); });
-
-          let startX = 0, currentX = 0, dragging = false;
-          function onPointerDown(ev) {
-            dragging = true;
-            el.classList.add('dragging');
-            startX = (ev.type && ev.type.startsWith && ev.type.startsWith('touch')) ? ev.touches[0].clientX : ev.clientX;
-            currentX = startX;
-            el.style.transition = 'none';
-          }
-          function onPointerMove(ev) {
-            if (!dragging) return;
-            const clientX = (ev.type && ev.type.startsWith && ev.type.startsWith('touch')) ? ev.touches[0].clientX : ev.clientX;
-            currentX = clientX;
-            const dx = currentX - startX;
-            el.style.transform = `translateX(${Math.max(0, dx)}px)`;
-            el.style.opacity = String(Math.max(0, 1 - Math.abs(dx) / 300));
-          }
-          function onPointerUp(ev) {
-            if (!dragging) return;
-            dragging = false;
-            el.classList.remove('dragging');
-            el.style.transition = '';
-            const dx = currentX - startX;
-            if (dx > 120) dismiss(el);
-            else { el.style.transform = ''; el.style.opacity = ''; }
-          }
-
-          el.addEventListener('mousedown', onPointerDown);
-          window.addEventListener('mousemove', onPointerMove);
-          window.addEventListener('mouseup', onPointerUp);
-          el.addEventListener('touchstart', onPointerDown, {passive:true});
-          window.addEventListener('touchmove', onPointerMove, {passive:true});
-          window.addEventListener('touchend', onPointerUp);
-        }
-
-        function dismiss(el) {
-          if (!el || !el.parentNode) return;
-          el.classList.remove('show');
-          el.style.transform = 'translateX(14px) translateY(-8px) scale(.98)';
-          el.style.opacity = '0';
-          if (el._toastTimeoutId) clearTimeout(el._toastTimeoutId);
-          setTimeout(()=> { try { el.remove(); } catch(e){} }, 260);
-        }
-
-        window.showToast = function(message, title, ttl) {
-          const body = message || '';
-          const head = title || '通知';
-          const time = typeof ttl === 'number' ? ttl : 4200;
-          createToast(head, body, time);
-        };
-      })();
-    </script>
-  </body>
+/* helper exposed for compatibility */
+function toggleVc() {
+  const current = getCookie('vc') || '{{ vc }}';
+  const next = current === '1' ? '0' : '1';
+  setCookie('vc', next, 30);
+  applyVcToLinks(next);
+  showToast(next === '1' ? '/w に変更しました!!' : '/watch に変更しました!!');
+}
+function setVcMode(val) {
+  setCookie('vc', val, 30);
+  applyVcToLinks(val);
+  showToast((val === '1' ? '/w' : (val === '2' ? '/ume' : (val === '3' ? '/edu' : '/watch'))) + ' に変更しました!!');
+}
+</script>
+</body>
 </html>
