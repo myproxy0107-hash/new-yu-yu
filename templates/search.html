@@ -421,7 +421,7 @@
 
     <!-- 歯車ボタン（左下） -->
     <button class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
-      <span class="gear">⚙️</span>
+      <span class="gear">設定⚙️</span>
     </button>
 
     <!-- 設定パネル（歯車の上に立ち上がる） -->
@@ -431,14 +431,14 @@
       <div class="settings-row">
         <div>
           <label for="vcSelectPanel">再生モード</label>
-          <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
+          <div class="desc">リンク先を選択できます。</div>
         </div>
         <div>
           <select id="vcSelectPanel" style="min-width:120px;">
-            <option value="0">/watch (フルパス)</option>
-            <option value="1">/w (短縮)</option>
-            <option value="2">/ume (埋め込み)</option>
-            <option value="3">/edu (別モード)</option>
+            <option value="0">strram再生</option>
+            <option value="1">高画質再生</option>
+            <option value="2">埋め込み(Nocookie)</option>
+            <option value="3">埋め込み(追加予定edu)</option>
           </select>
         </div>
       </div>
@@ -446,7 +446,7 @@
       <div class="settings-row">
         <div>
           <label for="proxyToggle">サムネイルプロキシ</label>
-          <div class="desc">プロキシによるサムネイル取得をオンにします（クッキーで保存）</div>
+          <div class="desc">プロキシによるサムネイル取得をオンにします（知らんけど）</div>
         </div>
         <div>
           <input id="proxyToggle" type="checkbox" />
