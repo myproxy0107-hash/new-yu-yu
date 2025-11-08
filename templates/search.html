@@ -14,143 +14,186 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
     <style>
-         .contents #searchbox {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            text-align: right;
-            z-index: 20;
-            color: #ffffff;
-        }
-        #topButton {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #007BFF;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #topButton:hover {
-            background-color: #0056b3;
-        }
-        #topButton:active {
-            transform: scale(0.95);
-            background-color: #ff6347;
-        }
+        /* もともとのCSS（保持） */
+      :root {
+        --yt-spec-base-background: #ffffff;
+        --yt-spec-raised-background: #ffffff;
+        --yt-spec-menu-background: #ffffff;
+        --yt-spec-inverted-background: #0f0f0f;
+        --yt-spec-outline: rgba(0, 0, 0, 0.1);
+        --yt-spec-text-primary: #0f0f0f;
+        --yt-spec-text-secondary: #606060;
+        --yt-spec-red: #ff0000;
+        --yt-spec-brand-button-text: #065fd4;
+      }
+      div.thumbnail { padding: 5%; position: relative; box-sizing: border-box; }
+      body { font-family: Roboto, Arial, sans-serif; background-color: var(--yt-spec-base-background); color: var(--yt-spec-text-primary); margin: 0; padding: 0; }
+      @media (max-width: 768px) { .shorts-link span { display: none; } }
 
-        /* vc selector style */
-        #vcSelect {
-            margin-left: 8px;
-            padding: 6px 10px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            background: #fff;
-            cursor: pointer;
-        }
-        #vcStatus { font-size: 0.9em; margin-left: 8px; vertical-align: middle; }
+      .main-content { margin-top: 56px; min-height: calc(100vh - 56px); padding: 16px; }
+      .video-container { display: flex; gap: 16px; }
+      .video-left { flex: 0 0 75%; display: flex; flex-direction: column; }
+      .video-right { flex: 0 0 30%; }
+      .video-player-container { width: 100%; }
+      .video-player-wrapper { position: relative; }
+      .video-player-wrapper video { width: 100%; aspect-ratio: 16 / 9; background: #000; }
 
-        /* ---------- settings panel (overlay) ---------- */
-        /* gear moved to left-bottom */
-        .settings-toggle {
-          position: fixed;
-          left: 18px;
-          bottom: 18px;
-          z-index: 140;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          font-size: 20px;
-          color: #fff;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .settings-toggle .gear {
-          width: 44px;
-          height: 44px;
-          border-radius: 10px;
-          background: rgba(0,0,0,0.55);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-          color: #fff;
-          font-size: 20px;
-        }
-        .settings-panel {
-          position: fixed;
-          bottom: 78px;
-          left: 18px;
-          width: 320px;
-          max-width: calc(100% - 36px);
-          background: #ffffff;
-          border-radius: 12px;
-          box-shadow: 0 14px 40px rgba(0,0,0,0.18);
-          padding: 16px;
-          z-index: 139;
-          transform-origin: bottom left;
-          transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
-          opacity: 0;
-          transform: translateY(10px) scale(.98);
-          pointer-events: none;
-        }
-        .settings-panel.open {
-          transform: translateY(0) scale(1);
-          opacity: 1;
-          pointer-events: auto;
-        }
-        .settings-panel h4 { margin: 0 0 10px; font-size: 1rem; color: #222; }
-        .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
-        .settings-row:last-child { border-bottom: none; }
-        .settings-row label { font-size: 0.92rem; color: #333; }
-        .settings-row .desc { font-size: 0.8rem; color: #666; display:block; margin-top:6px; }
+      /* ローダー */
+      #loader { border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 80px; height: 80px; animation: spin 1s linear infinite; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; display: none; }
+      @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
 
-        /* ---------- toast (notification) ---------- */
-        .toast-wrap {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          z-index: 150;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          pointer-events: none;
-        }
-        .toast {
-          min-width: 220px;
-          max-width: 360px;
-          background: linear-gradient(180deg,#fff,#f6f9ff);
-          border-radius: 10px;
-          padding: 12px 14px;
-          box-shadow: 0 10px 30px rgba(14,30,37,0.12);
-          color: #042a4a;
-          font-size: 0.95rem;
-          border-left: 4px solid #007BFF;
-          transform: translateX(12px) translateY(-8px) scale(.98);
-          opacity: 0;
-          transition: transform 300ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease;
-          pointer-events: auto;
-          touch-action: pan-y;
-          user-select: none;
-        }
-        .toast.show { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
-        .toast .title { font-weight: 700; margin-bottom: 6px; }
-        .toast .body { font-weight: 500; color: #234; }
-        .toast.dragging { transition: none; opacity: 0.95; }
-        .toast .close-x { position: absolute; top: 6px; right: 8px; font-weight: 700; color: rgba(0,0,0,0.45); cursor: pointer; }
-        .toast .hint { margin-top: 8px; font-size: 0.78rem; color: #556; display:block; }
+      .video-description { margin-top: 16px; background-color: #f9f9f9; padding: 12px; border-radius: 4px; text-align: left; }
+      .comments-section { margin-top: 16px; background-color: #ffffff; padding: 12px; border: 1px solid var(--yt-spec-outline); border-radius: 4px; text-align: left; }
+      .comments-section h3 { margin-top: 0; font-size: 18px; margin-bottom: 8px; }
+      .comment-item { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--yt-spec-outline); }
+      .comment-item:last-child { border-bottom: none; }
+      .comment-header { margin-bottom: 4px; }
+      .comment-author { font-weight: bold; margin-right: 8px; }
+      .comment-actions { font-size: 12px; color: var(--yt-spec-text-secondary); }
+      .recommendation { margin-bottom: 8px; }
+      .recommendation a { text-decoration: none; color: var(--yt-spec-text-primary); display: block; }
+      .thumbnail { position: relative; width: 100%; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+      .thumbnail img { width: 100%; display: block; }
+      .length { position: absolute; bottom: 8px; right: 8px; background: rgba(0, 0, 0, 0.8); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+      .recommendation p { margin: 4px 0 0; font-size: 14px; }
+      @media (max-width: 768px) { .video-container { display: block; } .video-right { margin-top: 16px; } }
 
+       /* トップバー */
+      #top-bar { display: flex; align-items: center; justify-content: space-between; background-color: #ffffff; height: 56px; padding: 0 15px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
+      #top-bar .left-section { display: flex; align-items: center; }
+      #open-sidebar { font-size: 30px; background: none; border: none; cursor: pointer; color: #007bff; }
+
+      /* サイドバー */
+      #sidebar { position: fixed; top: 56px; left: -100%; width: 80%; max-width: 300px; height: calc(100% - 56px); background-color: #000; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); overflow-y: auto; transition: left 0.3s ease; z-index: 1100; color: #fff; }
+      #sidebar.active { left: 0; }
+      #sidebar .sidebar-content { padding: 20px; }
+      #sidebar a { display: block; margin-bottom: 10px; color: #fff; text-decoration: none; }
+      #sidebar button#close-sidebar { background: none; border: none; font-size: 24px; color: #fff; position: absolute; top: 10px; right: 10px; cursor: pointer; }
+
+      /* overlay */
+      #overlay { position: fixed; top: 56px; left: 0; width: 100%; height: calc(100% - 56px); background: rgba(0, 0, 0, 0.4); opacity: 0; visibility: hidden; transition: opacity 0.3s ease; z-index: 1000; }
+      #overlay.active { opacity: 1; visibility: visible; }
+
+      #sidebar .sidebar-content > * { border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 0; margin: 0; }
+      #sidebar .sidebar-content > *:last-child { border-bottom: none; }
+
+      /* ---------- 追加: 歯車・設定パネル・トースト（左下・右上） ---------- */
+
+      .settings-toggle {
+        position: fixed;
+        left: 18px;
+        bottom: 18px;
+        z-index: 140;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 20px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
+      }
+      .settings-toggle .gear {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+        color: #fff;
+        font-size: 20px;
+      }
+
+      .settings-panel {
+        position: fixed;
+        bottom: 78px;
+        left: 18px;
+        width: 320px;
+        max-width: calc(100% - 36px);
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+        padding: 16px;
+        z-index: 139;
+        transform-origin: bottom left;
+        transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
+        opacity: 0;
+        transform: translateY(10px) scale(.98);
+        pointer-events: none;
+      }
+      .settings-panel.open { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+      .settings-panel h4 { margin: 0 0 10px; font-size: 1rem; color: #222; }
+      .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+      .settings-row:last-child { border-bottom: none; }
+      .settings-row label { font-size: 0.92rem; color: #333; }
+      .settings-row .desc { font-size: 0.8rem; color: #666; display:block; margin-top:6px; }
+
+      .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 150; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+      .toast {
+        min-width: 220px;
+        max-width: 360px;
+        background: linear-gradient(180deg,#fff,#f6f9ff);
+        border-radius: 10px;
+        padding: 12px 14px;
+        box-shadow: 0 10px 30px rgba(14,30,37,0.12);
+        color: #042a4a;
+        font-size: 0.95rem;
+        border-left: 4px solid #007BFF;
+        transform: translateX(12px) translateY(-8px) scale(.98);
+        opacity: 0;
+        transition: transform 300ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease;
+        pointer-events: auto;
+        touch-action: pan-y;
+        user-select: none;
+        position: relative;
+      }
+      .toast.show { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
+      .toast .title { font-weight: 700; margin-bottom: 6px; }
+      .toast .body { font-weight: 500; color: #234; }
+      .toast.dragging { transition: none; opacity: 0.95; }
+      .toast .close-x { position: absolute; top: 6px; right: 8px; font-weight: 700; color: rgba(0,0,0,0.45); cursor: pointer; }
+      .toast .hint { margin-top: 8px; font-size: 0.78rem; color: #556; display:block; }
+
+      /* ---------- 右下 もっと読み込む（FAB） ---------- */
+      .load-more-fab {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 145;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        background: linear-gradient(180deg,#0b84ff,#0666d6);
+        color: #fff;
+        font-weight: 700;
+        font-size: 15px;
+        box-shadow: 0 10px 30px rgba(6,50,120,0.22);
+        border: none;
+        cursor: pointer;
+        transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      .load-more-fab .icon { width: 22px; height: 22px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; background: rgba(255,255,255,0.08); }
+      .load-more-fab:active { transform: translateY(2px) scale(.99); }
+      .load-more-fab[disabled] { opacity: 0.6; cursor: default; pointer-events: none; }
+
+      @media (max-width: 640px) {
+        .settings-toggle .gear { width: 40px; height: 40px; }
+        .settings-panel { width: calc(100% - 36px); left: 18px; right: 18px; }
+        .load-more-fab { padding: 12px 14px; right: 12px; bottom: 12px; font-size: 14px; }
+      }
     </style>
-</head>
+
+    <!-- Font Awesome（アイコン用） -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  </head>
 <body>
 <header id="top-bar">
     <div class="navbar-logo">
