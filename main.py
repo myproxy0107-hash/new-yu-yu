@@ -858,9 +858,9 @@ def list_page(response: Response, request: Request):
 @app.get("/tools", response_class=HTMLResponse)
 def list_page(response: Response, request: Request):
     return template("tools.html", {"request": request})
-@app.get("/news", response_class=HTMLResponse)
+@app.get("/settings", response_class=HTMLResponse)
 def list_page(response: Response, request: Request):
-    return template("news.html", {"request": request})
+    return template("settings.html", {"request": request})
 @app.get("/re", response_class=HTMLResponse)
 def list_page(response: Response, request: Request):
     return template("re.html", {"request": request})
