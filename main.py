@@ -341,7 +341,7 @@ from fastapi.responses import RedirectResponse as redirect
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Union
+from typing import Union ,Optional
 from fastapi import Form
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
@@ -518,13 +518,11 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
         "recommended_videos": video_data[1],
         "proxy":proxy
     })
-  
-@app.get('/ww', response_class=HTMLResponse)
-def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
-    # v: video_id
-    if not(checkCookie(yuki)):
+@app.get('/edu', response_class=HTMLResponse)
+def ume_video(v: str, response: Response, request: Request, yuki: Union[str, None] = Cookie(None), proxy: Union[str, None] = Cookie(None)):
+    if not checkCookie(yuki):
         return redirect("/")
-    response.set_cookie(key="yuki", value="True", max_age=7*24*60*60)
+    response.set_cookie("yuki", "True", max_age=7*24*60*60)
     video_data = getVideoData(v)
     '''
     return [
@@ -539,7 +537,6 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
             'view_count': t["viewCount"],
             'like_count': t["likeCount"],
             'subscribers_count': t["subCountText"]
-            'streamUrls': streamUrls
         },
         [
             {
@@ -553,7 +550,7 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
     ]
     '''
     response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
-    return template('watch.html', {
+    return template('edu.html', {
         "request": request,
         "videoid": v,
         "videourls": video_data[0]['video_urls'],
@@ -566,18 +563,28 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
         "view_count": video_data[0]['view_count'],
         "like_count": video_data[0]['like_count'],
         "subscribers_count": video_data[0]['subscribers_count'],
-        "streamUrls": video_data[0]['streamUrls'],
         "recommended_videos": video_data[1],
         "proxy":proxy
     })
-
+  
 @app.get("/search", response_class=HTMLResponse)
-def search(q:str, response: Response, request: Request, page:Union[int, None]=1, yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
+def search(q: str, response: Response, request: Request, page: Union[int, None] = 1,
+           yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
     if not(checkCookie(yuki)):
         return redirect("/")
     response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
-    return template("search.html", {"request": request, "results":getSearchData(q, page), "word":q, "next":f"/search?q={q}&page={page + 1}", "proxy":proxy})
 
+    # クッキー vc を取得（無ければ '0' をデフォルト）
+    vc_cookie = request.cookies.get("vc", "0")
+
+    return template("search.html", {
+        "request": request,
+        "results": getSearchData(q, page),
+        "word": q,
+        "next": f"/search?q={q}&page={page + 1}",
+        "proxy": proxy,
+        "vc": vc_cookie
+    })
 @app.get("/hashtag/{tag}")
 def search(tag:str, response: Response, request: Request, page:Union[int, None]=1, yuki: Union[str] = Cookie(None)):
     if not(checkCookie(yuki)):
