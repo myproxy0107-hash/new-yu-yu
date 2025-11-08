@@ -1,20 +1,686 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>設定</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex,nofollow">
+    <title>検索</title>
+    <link rel="icon" href="/img/logo/favicon.ico">
+    <link rel="stylesheet" href="/css/pure-min.css">
+    <link rel="stylesheet" href="/css/grids-responsive-min.css">
+    <link rel="stylesheet" href="/css/ionicons.min.css">
+    <link rel="stylesheet" href="/css/default.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <style>
+        /* ---------- base styles (keeps original layout) ---------- */
+        .contents #searchbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            text-align: right;
+            z-index: 20;
+            color: #ffffff;
+        }
+        #topButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #topButton:hover { background-color: #0056b3; }
+        #topButton:active { transform: scale(0.95); background-color: #ff6347; }
+
+        /* ---------- visual enhancements for cards (does not break layout) ---------- */
+        a.dynamic-link {
+          display: block;
+          color: inherit;
+          text-decoration: none;
+          background: #fff;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+          transition: transform 180ms ease, box-shadow 180ms ease;
+          border: 1px solid rgba(0,0,0,0.05);
+        }
+        a.dynamic-link:hover, a.dynamic-link:focus {
+          transform: translateY(-6px);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+          outline: none;
+        }
+        a.dynamic-link .thumbnail {
+          position: relative;
+          background: #000;
+          height: 0;
+          padding-bottom: 56.25%;
+          overflow: hidden;
+        }
+        a.dynamic-link .thumbnail img.thumbnail {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 240ms ease;
+        }
+        a.dynamic-link:hover .thumbnail img.thumbnail { transform: scale(1.03); }
+        a.dynamic-link .length {
+          position: absolute;
+          right: 8px;
+          bottom: 8px;
+          background: rgba(0,0,0,0.75);
+          color: #fff;
+          padding: 4px 7px;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          line-height: 1;
+          z-index: 3;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        }
+        a.dynamic-link > p[dir="auto"] {
+          margin: 10px 12px 6px;
+          font-weight: 600;
+          color: #222;
+          font-size: 0.95rem;
+          line-height: 1.25;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+        .video-card-row.flexible {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 12px 10px;
+          gap: 8px;
+          color: #666;
+          font-size: 0.85rem;
+        }
+        .video-card-row.flexible a { color: #007BFF; text-decoration: none; font-weight: 500; }
+        .video-card-row.flexible a:hover { text-decoration: underline; }
+        .video-data { margin: 0; display: inline-block; color: #666; font-size: 0.82rem; }
+
+        /* vc selector / button styles */
+        #vcSelect {
+          min-width: 140px;
+          padding: 7px 10px;
+          border-radius: 6px;
+          border: 1px solid rgba(0,0,0,0.12);
+          background: #fff;
+          font-size: 0.92rem;
+          vertical-align: middle;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        #vcSelect:focus {
+          outline: 3px solid rgba(0,123,255,0.15);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+        }
+        #vcStatus { display: inline-block; color: #444; font-size: 0.88rem; margin-left: 10px; vertical-align: middle; }
+
+        /* topBar behavior */
+        #top-bar { transition: background 200ms ease, box-shadow 200ms ease; }
+        #top-bar.scrolled { background: rgba(255,255,255,0.96); box-shadow: 0 3px 12px rgba(0,0,0,0.06); }
+
+        /* responsive */
+        @media (max-width: 640px) {
+          a.dynamic-link { border-radius: 6px; }
+          .pure-u-1.pure-u-md-1-4 { padding: 6px 8px; }
+          .pure-u-1.pure-u-md-12-24.searchbar { padding-right: 0; }
+          #vcSelect { min-width: 120px; }
+        }
+
+        /* ---------- settings panel (overlay) ---------- */
+        .settings-toggle {
+          position: fixed;
+          top: 14px;
+          right: 16px;
+          z-index: 120;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          font-size: 20px;
+          color: #fff;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .settings-toggle .gear {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          background: rgba(0,0,0,0.45);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        /* panel */
+        .settings-panel {
+          position: fixed;
+          top: 60px;
+          right: 16px;
+          width: 320px;
+          max-width: calc(100% - 32px);
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+          padding: 16px;
+          z-index: 119;
+          transform-origin: top right;
+          transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
+          opacity: 0;
+          transform: translateY(-8px) scale(.98);
+          pointer-events: none;
+        }
+        .settings-panel.open {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+          pointer-events: auto;
+        }
+        .settings-panel h4 { margin: 0 0 10px; font-size: 1rem; color: #222; }
+        .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+        .settings-row:last-child { border-bottom: none; }
+        .settings-row label { font-size: 0.92rem; color: #333; }
+        .settings-row .desc { font-size: 0.8rem; color: #666; display:block; margin-top:6px; }
+
+        /* ---------- toast (notification) ---------- */
+        .toast-wrap {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 130;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          pointer-events: none;
+        }
+        .toast {
+          min-width: 220px;
+          max-width: 360px;
+          background: linear-gradient(180deg,#fff,#f6f9ff);
+          border-radius: 10px;
+          padding: 12px 14px;
+          box-shadow: 0 10px 30px rgba(14,30,37,0.12);
+          color: #042a4a;
+          font-size: 0.95rem;
+          border-left: 4px solid #007BFF;
+          transform: translateX(12px) translateY(-8px) scale(.98);
+          opacity: 0;
+          transition: transform 300ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease;
+          pointer-events: auto;
+          touch-action: pan-y;
+          user-select: none;
+        }
+        .toast.show {
+          transform: translateX(0) translateY(0) scale(1);
+          opacity: 1;
+        }
+        .toast .title { font-weight: 700; margin-bottom: 6px; }
+        .toast .body { font-weight: 500; color: #234; }
+
+        /* drag feedback */
+        .toast.dragging { transition: none; opacity: 0.95; }
+        .toast .close-x {
+          position: absolute;
+          top: 6px;
+          right: 8px;
+          font-weight: 700;
+          color: rgba(0,0,0,0.45);
+          cursor: pointer;
+        }
+        .toast .hint { margin-top: 8px; font-size: 0.78rem; color: #556; display:block; }
+
+    </style>
 </head>
 <body>
-    <h1>設定</h1>
-    <p>現在の埋め込み再生設定：{{ "オン" if ume_toggle == "true" else "オフ" }}</p>
-    <form method="post" action="/settings">
-        {% if ume_toggle == "true" %}
-            <input type="hidden" name="embed" value="off">
-            <button type="submit">埋め込み再生をオフにする</button>
-        {% else %}
-            <input type="hidden" name="embed" value="on">
-            <button type="submit">埋め込み再生をオンにする</button>
-        {% endif %}
-    </form>
+<header id="top-bar">
+    <div class="navbar-logo">
+      <a href="/"><img src="/img/logo/th.png" alt="Logo"></a>
+    </div>
+    <div id="hamburger">&#9776;</div>
+    <nav id="top-nav">
+      <a href="/bbs">掲示板</a>
+      <a href="/proxypage">Proxy</a>
+      <a href="/others">その他</a>
+      <a href="/sitsumon">回答よろ</a>
+    </nav>
+</header>
+
+<!-- Settings toggle (gear) -->
+<button class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
+  <span class="gear">⚙️</span>
+</button>
+
+<!-- Settings panel -->
+<div class="settings-panel" id="settingsPanel" role="dialog" aria-hidden="true" aria-labelledby="settingsTitle">
+  <h4 id="settingsTitle">表示と再生の設定</h4>
+
+  <div class="settings-row">
+    <div>
+      <label for="vcSelectPanel">再生モード</label>
+      <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
+    </div>
+    <div>
+      <select id="vcSelectPanel" style="min-width:120px;">
+        <option value="0">/watch (フルパス)</option>
+        <option value="1">/w (短縮)</option>
+        <option value="2">/ume (埋め込み)</option>
+        <option value="3">/edu (別モード)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="settings-row">
+    <div>
+      <label for="proxyToggle">サムネイルプロキシ</label>
+      <div class="desc">プロキシによるサムネイル取得をオンにします（クッキーで保存）</div>
+    </div>
+    <div>
+      <input id="proxyToggle" type="checkbox" />
+    </div>
+  </div>
+
+  <div style="padding-top:10px; text-align:right;">
+    <button id="settingsSaveBtn" style="padding:8px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#007BFF; color:#fff; cursor:pointer;">保存</button>
+  </div>
+</div>
+
+<br>
+
+<div class="no-theme">
+    <span id="dark_mode_pref" style="display: none;"></span>
+    <div class="pure-g">
+        <div class="pure-u-1 pure-u-md-2-24"></div>
+
+        <div id="contents" class="pure-u-1 pure-u-md-20-24">
+            <div class="pure-g navbar h-box">
+                <div class="pure-u-1 pure-u-md-12-24 searchbar">
+                    <form class="pure-form" action="/search" method="get">
+                        <fieldset>
+                            <input id="searchbox" name="q" type="search" placeholder="検索" value="{{ word }}" title="検索" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false">
+                        </fieldset>
+                    </form>
+                </div>
+
+                <!-- 再生モード選択ドロップダウン（すぐ切り替えたいユーザー用） -->
+                <div class="pure-u-1 pure-u-md-12-24" style="text-align:right; padding-top:10px;">
+                    <label for="vcSelect" style="font-size:0.9em; margin-right:6px;">再生モード</label>
+                    <select id="vcSelect" name="vcSelect" aria-label="再生モード選択">
+                        <option value="0">/watch (フルパス)</option>
+                        <option value="1">/w (短縮)</option>
+                        <option value="2">/ume (埋め込み)</option>
+                        <option value="3">/edu (別モード)</option>
+                    </select>
+                    <span id="vcStatus"></span>
+                </div>
+            </div>
+
+            <!-- 固定トップボタン（既存機能） -->
+            <button id="topButton" onclick="toggleLink()">読み込み方を変更!</button>
+
+            <script>
+            let isWatch = true;
+            function toggleLink() {
+                isWatch = !isWatch;
+                // 既存の挙動はここに残す（/watch <-> /umeなど既存機能）
+                // ここではトーストだけ表示しておく
+                showToast(isWatch ? "埋め込みモードに変更されました！" : "デフォルトモードに変更されました！");
+            }
+            </script>
+
+            <div class="pure-g">
+                {% for result in results %}
+                <div class="pure-u-1 pure-u-md-1-4" style="padding:10px;">
+                    <div class="h-box">
+                        {% if result["type"] == "video" %}
+                        <a class="dynamic-link" href="{{ '/w' if vc == '1' else ('/ume' if vc == '2' else ('/edu' if vc == '3' else '/watch')) }}?v={{ result['id'] }}" style="width:100%">
+                            <div class="thumbnail">
+                                <img class="thumbnail" loading="lazy"
+                                     src="{% if proxy == 'True' %}/thumbnail?v={{ result['id'] }}{% else %}https://img.youtube.com/vi/{{ result['id'] }}/0.jpg{% endif %}"
+                                     onerror="document.cookie = 'proxy=True;max-age=2592000;';">
+                                <p class="length">{{ result["length"] }}</p>
+                            </div>
+                            <p dir="auto">{{ result['title'] }}</p>
+                        </a>
+
+                        <div class="video-card-row flexible">
+                            <a href="/channel/{{ result['authorId'] }}">{{ result["author"] }}</a>
+                        </div>
+
+                        <div class="video-card-row flexible">
+                            <div class="flex-left">
+                                <p class="video-data" dir="auto">{{ result["view_count_text"] }}</p>
+                                <p class="video-data" dir="auto">{{ result["published"] }}</p>
+                            </div>
+                        </div>
+
+                        {% elif result["type"] == "channel" %}
+                        <a href="/channel/{{ result["id"] }}">
+                            <center>
+                                <img loading="lazy" tabindex="-1" style="width:56.25%" src="{{ result["thumbnail"] }}">
+                            </center>
+                            <p dir="auto">{{ result["author"] }}</p>
+                        </a>
+
+                        {% elif result["type"] == "playlist" %}
+                        <a class="dynamic-link" style="width: 100%;" href="{{ '/w' if vc == '1' else ('/ume' if vc == '2' else ('/edu' if vc == '3' else '/watch')) }}?v={{ result['id'] }}">
+                            <div class="thumbnail">
+                                <img loading="lazy" tabindex="-1" class="thumbnail" src="{{ result['thumbnail'] }}">
+                                <p class="length">{{ result["count"] }}個の動画</p>
+                            </div>
+                            <p dir="auto">{{ result["title"] }}</p>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="pure-g h-box">
+        <div class="pure-u-1 pure-u-lg-1-5"></div>
+    </div>
+
+    <div class="pure-u-1 pure-u-lg-3-5"></div>
+    <div class="pure-u-1 pure-u-lg-1-5" style="text-align:right">
+        <a href="{{ next }}">次のページ</a>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+/* ---------- cookie helpers ---------- */
+function getCookie(name) {
+  const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return v ? decodeURIComponent(v.pop()) : null;
+}
+function setCookie(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (days||30) * 24 * 60 * 60 * 1000);
+  const expires = "expires=" + d.toUTCString();
+  document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+}
+
+/* ---------- vc path helper ---------- */
+function vcToPath(vc) {
+  switch(vc) {
+    case '1': return '/w';
+    case '2': return '/ume';
+    case '3': return '/edu';
+    default:  return '/watch';
+  }
+}
+
+/* ---------- link rewriting ---------- */
+function applyVcToLinks(vc) {
+  const targetPath = vcToPath(vc);
+  const links = document.querySelectorAll('a.dynamic-link');
+  links.forEach(a => {
+    try {
+      const url = new URL(a.getAttribute('href'), window.location.origin);
+      url.pathname = targetPath;
+      a.setAttribute('href', url.pathname + url.search);
+    } catch (e) {
+      // fallback
+      let href = a.getAttribute('href') || '';
+      const idx = href.indexOf('?');
+      const query = idx >= 0 ? href.slice(idx) : '';
+      a.setAttribute('href', targetPath + query);
+    }
+  });
+  const st = document.getElementById('vcStatus');
+  if (st) {
+    let label = '';
+    switch(vc) {
+      case '1': label = '現在: 短縮パス /w'; break;
+      case '2': label = '現在: 埋め込み /ume'; break;
+      case '3': label = '現在: 別モード /edu'; break;
+      default:  label = '現在: フルパス /watch';
+    }
+    st.textContent = label;
+  }
+}
+
+/* ---------- dropdown change handler (header) ---------- */
+document.addEventListener('DOMContentLoaded', function() {
+  const serverVc = '{{ vc }}';
+  const cookieVc = getCookie('vc');
+  const vc = cookieVc !== null ? cookieVc : (serverVc || '0');
+  if (cookieVc === null) setCookie('vc', vc, 30);
+
+  // header select
+  const sel = document.getElementById('vcSelect');
+  if (sel) {
+    sel.value = vc;
+    sel.addEventListener('change', function(e){
+      const val = e.target.value;
+      setCookie('vc', val, 30);
+      applyVcToLinks(val);
+      // show toast when user changes
+      showToast((val === '1' ? '/w' : (val === '2' ? '/ume' : (val === '3' ? '/edu' : '/watch'))) + " に変更しました!!");
+      // also update settings panel select (if open)
+      const p = document.getElementById('vcSelectPanel');
+      if (p) p.value = val;
+    });
+  }
+
+  // apply initially
+  applyVcToLinks(vc);
+
+  // settings panel wiring
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+  const proxyToggle = document.getElementById('proxyToggle');
+  const vcSelectPanel = document.getElementById('vcSelectPanel');
+
+  // sync panel controls from cookies
+  if (vcSelectPanel) vcSelectPanel.value = vc;
+  const proxyCookie = getCookie('proxy') || ( '{{ proxy }}' === 'True' ? 'True' : null );
+  if (proxyCookie === 'True') proxyToggle.checked = true;
+
+  function openSettings() {
+    settingsPanel.classList.add('open');
+    settingsPanel.setAttribute('aria-hidden', 'false');
+  }
+  function closeSettings() {
+    settingsPanel.classList.remove('open');
+    settingsPanel.setAttribute('aria-hidden', 'true');
+  }
+
+  settingsToggle.addEventListener('click', function(e){
+    e.stopPropagation();
+    if (settingsPanel.classList.contains('open')) closeSettings();
+    else openSettings();
+  });
+
+  // clicking outside closes panel
+  document.addEventListener('click', function(e){
+    if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) closeSettings();
+  });
+
+  // save button: write cookies and apply
+  settingsSaveBtn.addEventListener('click', function(){
+    const newVc = vcSelectPanel.value;
+    setCookie('vc', newVc, 30);
+    applyVcToLinks(newVc);
+    // proxy checkbox
+    if (proxyToggle.checked) setCookie('proxy', 'True', 30);
+    else setCookie('proxy', 'False', 30);
+
+    showToast('設定を保存しました!!');
+    closeSettings();
+  });
+
+  // sync header select when panel select changes
+  if (vcSelectPanel) {
+    vcSelectPanel.addEventListener('change', function(e){
+      const val = e.target.value;
+      const headerSel = document.getElementById('vcSelect');
+      if (headerSel) headerSel.value = val;
+    });
+  }
+
+  // existing autocomplete and header behaviour (kept)
+  $('#searchbox').autocomplete({
+    source: function (request, response) {
+      var url = "/suggest?keyword=" + request.term;
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url);
+      xhr.onload = function() {
+        try { response(JSON.parse(xhr.responseText)); } catch(e) { response([]); }
+      };
+      xhr.send();
+    }, delay: 300
+  });
+
+  $("#hamburger").click(function() { $("#top-nav").toggleClass("show"); });
+  $(window).on("scroll", function() {
+    if($(window).scrollTop() > 50) { $("#top-bar").addClass("scrolled"); }
+    else { $("#top-bar").removeClass("scrolled"); }
+  });
+});
+
+/* ---------- Toast implementation ---------- */
+(function(){
+  const wrap = document.getElementById('toastWrap');
+  if (!wrap) return;
+
+  // create toast element
+  function createToast(title, body, ttl = 4200) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = '<div class="close-x" aria-hidden="true">✕</div>' +
+                   '<div class="title">' + (title || '') + '</div>' +
+                   '<div class="body">' + (body || '') + '</div>' +
+                   '<span class="hint">左から右へスライドで閉じる</span>';
+    wrap.appendChild(el);
+    // show
+    requestAnimationFrame(()=> el.classList.add('show') );
+
+    // auto remove
+    const timeoutId = setTimeout(()=> dismiss(el), ttl);
+
+    // close button
+    el.querySelector('.close-x').addEventListener('click', function(e){
+      e.stopPropagation();
+      clearTimeout(timeoutId);
+      dismiss(el);
+    });
+
+    // drag-to-dismiss: track pointer movements
+    let startX = 0;
+    let currentX = 0;
+    let dragging = false;
+
+    function onPointerDown(ev) {
+      dragging = true;
+      el.classList.add('dragging');
+      startX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+      currentX = startX;
+      // disable transition while dragging
+      el.style.transition = 'none';
+      // capture pointer for mouse
+      if (ev.pointerId) el.setPointerCapture && el.setPointerCapture(ev.pointerId);
+    }
+    function onPointerMove(ev) {
+      if (!dragging) return;
+      const clientX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+      currentX = clientX;
+      const dx = currentX - startX;
+      // only horizontal moves (left->right positive dx)
+      el.style.transform = `translateX(${Math.max(0, dx)}px)`;
+      el.style.opacity = String(Math.max(0, 1 - Math.abs(dx) / 300));
+    }
+    function onPointerUp(ev) {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      el.style.transition = '';
+      const dx = currentX - startX;
+      // threshold to dismiss: moved > 120px
+      if (dx > 120) {
+        dismiss(el);
+      } else {
+        // revert
+        el.style.transform = '';
+        el.style.opacity = '';
+      }
+    }
+
+    // mouse
+    el.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+    // touch
+    el.addEventListener('touchstart', onPointerDown, {passive:true});
+    window.addEventListener('touchmove', onPointerMove, {passive:true});
+    window.addEventListener('touchend', onPointerUp);
+
+    return el;
+  }
+
+  function dismiss(el) {
+    if (!el) return;
+    el.classList.remove('show');
+    el.style.transform = 'translateX(14px) translateY(-8px) scale(.98)';
+    el.style.opacity = '0';
+    // remove after animation
+    setTimeout(()=> {
+      try { el.remove(); } catch(e) {}
+    }, 260);
+  }
+
+  // expose global helper
+  window.showToast = function(message, title) {
+    createToast(title || '通知', message || '', 4200);
+  };
+})();
+
+/* expose toggleVc for compatibility with previous code */
+function toggleVc() {
+  const current = getCookie('vc') || '{{ vc }}';
+  const next = current === '1' ? '0' : '1';
+  setCookie('vc', next, 30);
+  applyVcToLinks(next);
+  // show toast
+  showToast(next === '1' ? '/w に変更しました!!' : '/watch に変更しました!!');
+  // sync selects
+  const sel = document.getElementById('vcSelect');
+  const panelSel = document.getElementById('vcSelectPanel');
+  if (sel) sel.value = next;
+  if (panelSel) panelSel.value = next;
+}
+
+/* optional: helper to programmatically change mode and show toast */
+function setVcMode(val) {
+  setCookie('vc', val, 30);
+  applyVcToLinks(val);
+  const sel = document.getElementById('vcSelect');
+  const panelSel = document.getElementById('vcSelectPanel');
+  if (sel) sel.value = val;
+  if (panelSel) panelSel.value = val;
+  showToast((val === '1' ? '/w' : (val === '2' ? '/ume' : (val === '3' ? '/edu' : '/watch'))) + ' に変更しました!!');
+}
+
+</script>
 </body>
 </html>
+
