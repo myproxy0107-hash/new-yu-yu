@@ -366,159 +366,109 @@
 <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
 
 <script>
-/* ---------- cookie helpers ---------- */
-function getCookie(name) {
-  const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-  return v ? decodeURIComponent(v.pop()) : null;
-}
-function setCookie(name, value, days) {
-  const d = new Date();
-  d.setTime(d.getTime() + (days||30) * 24 * 60 * 60 * 1000);
-  const expires = "expires=" + d.toUTCString();
-  document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
-}
-
-/* ---------- vc path helper ---------- */
-function vcToPath(vc) {
-  switch(vc) {
-    case '1': return '/w';
-    case '2': return '/ume';
-    case '3': return '/edu';
-    default:  return '/watch';
-  }
-}
-
-/* ---------- link rewriting ---------- */
-function applyVcToLinks(vc) {
-  const targetPath = vcToPath(vc);
-  const links = document.querySelectorAll('a.dynamic-link');
-  links.forEach(a => {
-    try {
-      const url = new URL(a.getAttribute('href'), window.location.origin);
-      url.pathname = targetPath;
-      a.setAttribute('href', url.pathname + url.search);
-    } catch (e) {
-      let href = a.getAttribute('href') || '';
-      const idx = href.indexOf('?');
-      const query = idx >= 0 ? href.slice(idx) : '';
-      a.setAttribute('href', targetPath + query);
-    }
-  });
-  const st = document.getElementById('vcStatus');
-  if (st) {
-    let label = '';
-    switch(vc) {
-      case '1': label = '現在: 短縮パス /w'; break;
-      case '2': label = '現在: 埋め込み /ume'; break;
-      case '3': label = '現在: 別モード /edu'; break;
-      default:  label = '現在: フルパス /watch';
-    }
-    st.textContent = label;
-  }
-}
-
-/* ---------- DOM init ---------- */
-document.addEventListener('DOMContentLoaded', function() {
-  const serverVc = '{{ vc }}';
-  const cookieVc = getCookie('vc');
-  const vc = cookieVc !== null ? cookieVc : (serverVc || '0');
-  if (cookieVc === null) setCookie('vc', vc, 30);
-
-  // apply initial links
-  applyVcToLinks(vc);
-
-  // settings elements
-  const settingsToggle = document.getElementById('settingsToggle');
-  const settingsPanel = document.getElementById('settingsPanel');
-  const settingsSaveBtn = document.getElementById('settingsSaveBtn');
-  const proxyToggle = document.getElementById('proxyToggle');
-  const vcSelectPanel = document.getElementById('vcSelectPanel');
-
-  // sync panel controls from cookies
-  if (vcSelectPanel) vcSelectPanel.value = vc;
-  const proxyCookie = getCookie('proxy') || ( '{{ proxy }}' === 'True' ? 'True' : null );
-  if (proxyCookie === 'True') proxyToggle.checked = true;
-
-  function openSettings() {
-    settingsPanel.classList.add('open');
-    settingsPanel.setAttribute('aria-hidden', 'false');
-  }
-  function closeSettings() {
-    settingsPanel.classList.remove('open');
-    settingsPanel.setAttribute('aria-hidden', 'true');
-  }
-
-  settingsToggle.addEventListener('click', function(e){
-    e.stopPropagation();
-    if (settingsPanel.classList.contains('open')) closeSettings();
-    else openSettings();
-  });
-
-  document.addEventListener('click', function(e){
-    if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) closeSettings();
-  });
-
-  settingsSaveBtn.addEventListener('click', function(){
-    const newVc = vcSelectPanel.value;
-    setCookie('vc', newVc, 30);
-    applyVcToLinks(newVc);
-    if (proxyToggle.checked) setCookie('proxy', 'True', 30);
-    else setCookie('proxy', 'False', 30);
-    showToast('設定を保存しました!!');
-    closeSettings();
-  });
-
-  if (vcSelectPanel) {
-    vcSelectPanel.addEventListener('change', function(e){
-      const val = e.target.value;
-      const headerSel = document.getElementById('vcSelect');
-      if (headerSel) headerSel.value = val;
-    });
-  }
-
-  // autocomplete and header behaviour
-  $('#searchbox').autocomplete({
-    source: function (request, response) {
-      var url = "/suggest?keyword=" + request.term;
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url);
-      xhr.onload = function() {
-        try { response(JSON.parse(xhr.responseText)); } catch(e) { response([]); }
-      };
-      xhr.send();
-    }, delay: 300
-  });
-
-  $("#hamburger").click(function() { $("#top-nav").toggleClass("show"); });
-  $(window).on("scroll", function() {
-    if($(window).scrollTop() > 50) { $("#top-bar").addClass("scrolled"); }
-    else { $("#top-bar").removeClass("scrolled"); }
-  });
-});
-
-/* ---------- Toast implementation (右上表示・左から右にスライドで閉じる) ---------- */
+/* トースト（重複抑制 / 最大同時表示数）実装 */
 (function(){
   const wrap = document.getElementById('toastWrap');
   if (!wrap) return;
 
-  function createToast(title, body, ttl = 4200) {
+  const maxToasts = 3; // 同時表示数
+  const dedupeMap = new Map(); // key -> {el, timeoutId, expiresAt}
+
+  // ユニークキー作成（タイトル + 本文）
+  function makeKey(title, body) {
+    return (title || '') + '||' + (body || '');
+  }
+
+  // 古いトーストを削除してスペースを作る
+  function ensureSpace() {
+    const toasts = wrap.querySelectorAll('.toast');
+    if (toasts.length < maxToasts) return;
+    // 最も古いもの（data-created が最小）を削除
+    let oldest = null;
+    toasts.forEach(t => {
+      const created = parseInt(t.getAttribute('data-created') || '0', 10);
+      if (!oldest || created < parseInt(oldest.getAttribute('data-created') || '0', 10)) oldest = t;
+    });
+    if (oldest) dismiss(oldest);
+  }
+
+  function createToastElement(title, body) {
     const el = document.createElement('div');
     el.className = 'toast';
+    el.setAttribute('data-created', String(Date.now()));
     el.innerHTML = '<div class="close-x" aria-hidden="true">✕</div>' +
                    '<div class="title">' + (title || '') + '</div>' +
                    '<div class="body">' + (body || '') + '</div>' +
                    '<span class="hint">左から右へスライドで閉じる</span>';
+    return el;
+  }
+
+  function dismiss(el) {
+    if (!el || !el.parentNode) return;
+    const key = el._toastKey;
+    // DOM アニメーション
+    el.classList.remove('show');
+    el.style.transform = 'translateX(14px) translateY(-8px) scale(.98)';
+    el.style.opacity = '0';
+    // タイムアウトをクリア
+    if (el._toastTimeoutId) clearTimeout(el._toastTimeoutId);
+    // dedupeMap からも削除
+    if (key && dedupeMap.has(key)) dedupeMap.delete(key);
+    setTimeout(()=> { try { el.remove(); } catch(e) {} }, 260);
+  }
+
+  function focusToast(el) {
+    // 視覚的強調（pulse）
+    el.style.transition = 'none';
+    el.style.transform = 'translateY(-6px)';
+    setTimeout(()=> {
+      el.style.transition = '';
+      el.style.transform = '';
+    }, 260);
+  }
+
+  function createOrRefreshToast(title, body, ttl = 4200) {
+    const key = makeKey(title, body);
+
+    // 既に同じトーストがある場合はそれを再利用してTTLをリセット
+    if (dedupeMap.has(key)) {
+      const info = dedupeMap.get(key);
+      // clear existing timeout and set a new one
+      clearTimeout(info.timeoutId);
+      info.timeoutId = setTimeout(()=> dismiss(info.el), ttl);
+      info.expiresAt = Date.now() + ttl;
+      focusToast(info.el);
+      return info.el;
+    }
+
+    // 同時表示数が上限に達している場合は古いものを削除してから作成
+    ensureSpace();
+
+    // 新規作成
+    const el = createToastElement(title, body);
+    el._toastKey = key;
     wrap.appendChild(el);
+    // 強制 reflow -> show クラス追加でアニメーション
     requestAnimationFrame(()=> el.classList.add('show') );
 
+    // 自動削除タイマー
     const timeoutId = setTimeout(()=> dismiss(el), ttl);
+    el._toastTimeoutId = timeoutId;
 
-    el.querySelector('.close-x').addEventListener('click', function(e){
-      e.stopPropagation();
-      clearTimeout(timeoutId);
-      dismiss(el);
-    });
+    // dedupeMap に登録
+    dedupeMap.set(key, { el, timeoutId, expiresAt: Date.now() + ttl });
 
+    // 閉じるボタン
+    const closeX = el.querySelector('.close-x');
+    if (closeX) {
+      closeX.addEventListener('click', function(e){
+        e.stopPropagation();
+        clearTimeout(el._toastTimeoutId);
+        dismiss(el);
+      });
+    }
+
+    // ドラッグで閉じる（左から右へスライド）
     let startX = 0;
     let currentX = 0;
     let dragging = false;
@@ -526,16 +476,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function onPointerDown(ev) {
       dragging = true;
       el.classList.add('dragging');
-      startX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+      startX = ev.type && ev.type.startsWith && ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
       currentX = startX;
       el.style.transition = 'none';
     }
     function onPointerMove(ev) {
       if (!dragging) return;
-      const clientX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+      const clientX = ev.type && ev.type.startsWith && ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
       currentX = clientX;
       const dx = currentX - startX;
-      // only allow left->right (positive) visual
       el.style.transform = `translateX(${Math.max(0, dx)}px)`;
       el.style.opacity = String(Math.max(0, 1 - Math.abs(dx) / 300));
     }
@@ -545,8 +494,9 @@ document.addEventListener('DOMContentLoaded', function() {
       el.classList.remove('dragging');
       el.style.transition = '';
       const dx = currentX - startX;
-      if (dx > 120) dismiss(el);
-      else {
+      if (dx > 120) {
+        dismiss(el);
+      } else {
         el.style.transform = '';
         el.style.opacity = '';
       }
@@ -562,32 +512,18 @@ document.addEventListener('DOMContentLoaded', function() {
     return el;
   }
 
-  function dismiss(el) {
-    if (!el) return;
-    el.classList.remove('show');
-    el.style.transform = 'translateX(14px) translateY(-8px) scale(.98)';
-    el.style.opacity = '0';
-    setTimeout(()=> { try { el.remove(); } catch(e) {} }, 260);
-  }
-
-  window.showToast = function(message, title) {
-    createToast(title || '通知', message || '', 4200);
+  // グローバル公開関数
+  window.showToast = function(message, title, ttl) {
+    // 既存コードが showToast('message') や showToast('message','title') のどちらでも動くように整形
+    // 優先: (title, message) 呼び出しが既にあれば順序が逆のケースに注意してください。
+    // ここでは引数順: showToast(message, title, ttl)
+    const body = message || '';
+    const head = title || '通知';
+    const time = typeof ttl === 'number' ? ttl : 4200;
+    createOrRefreshToast(head, body, time);
   };
 })();
-
-/* helper exposed for compatibility */
-function toggleVc() {
-  const current = getCookie('vc') || '{{ vc }}';
-  const next = current === '1' ? '0' : '1';
-  setCookie('vc', next, 30);
-  applyVcToLinks(next);
-  showToast(next === '1' ? '/w に変更しました!!' : '/watch に変更しました!!');
-}
-function setVcMode(val) {
-  setCookie('vc', val, 30);
-  applyVcToLinks(val);
-  showToast((val === '1' ? '/w' : (val === '2' ? '/ume' : (val === '3' ? '/edu' : '/watch'))) + ' に変更しました!!');
-}
 </script>
+
 </body>
 </html>
