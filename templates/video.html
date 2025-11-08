@@ -452,6 +452,74 @@
         };
       })();
     </script>
+    <script>
+/* applyVcToLinks: vc 値 ( '0'|'1'|'2'|'3' ) に応じてページ内リンクを書き換える */
+function vcToPath(vc) {
+  switch (vc) {
+    case '1': return '/w';
+    case '2': return '/ume';
+    case '3': return '/edu';
+    default:  return '/watch';
+  }
+}
+
+/* リンクの書き換えを行う共通関数
+   対象セレクタは必要に応じて追加してください */
+function applyVcToLinks(vc) {
+  const targetPath = vcToPath(String(vc || getCookie('vc') || '0'));
+  // 対象セレクタ（.dynamic-link は検索一覧用。必要なら他セレクタも追加）
+  const selectors = [
+    'a.dynamic-link',         // 検索結果や一覧で使っているカードリンク
+    'a.recommendation-link',  // 推薦欄で独自クラスを付けている場合
+    'a[href^="/watch"]',      // /watch 絶対パスで始まるもの
+    'a[href^="/w"]',          // /w
+    'a[href^="/ume"]',
+    'a[href^="/edu"]'
+  ];
+
+  const nodeList = new Set();
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => nodeList.add(el));
+  });
+
+  nodeList.forEach(a => {
+    try {
+      const originalHref = a.getAttribute('href') || '';
+      // 既に絶対 URL または相対クエリ付きなどを想定して柔軟に扱う
+      // クエリを保持してパス部分を置換する（?v=xxx や ?list=.. を維持）
+      let url;
+      try {
+        url = new URL(originalHref, window.location.origin);
+        const search = url.search || '';
+        url.pathname = targetPath;
+        a.setAttribute('href', url.pathname + search);
+      } catch (e) {
+        // URL() が失敗する相対パスなどのフォールバック
+        const idx = originalHref.indexOf('?');
+        const query = idx >= 0 ? originalHref.slice(idx) : '';
+        a.setAttribute('href', targetPath + query);
+      }
+    } catch (err) {
+      // 無害なフォールバック、特定要素で失敗しても処理を続ける
+      console.warn('applyVcToLinks skipped element', a, err);
+    }
+  });
+
+  // 表示用ステータスがあれば更新
+  const st = document.getElementById('vcStatus');
+  if (st) {
+    let label = '';
+    switch (targetPath) {
+      case '/w': label = '現在: 短縮パス /w'; break;
+      case '/ume': label = '現在: 埋め込み /ume'; break;
+      case '/edu': label = '現在: 別モード /edu'; break;
+      default: label = '現在: フルパス /watch';
+    }
+    st.textContent = label;
+  }
+}
+</script>
+
 
     <!-- 既存の autocomplete 等はそのまま -->
     <script>
