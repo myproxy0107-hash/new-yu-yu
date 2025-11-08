@@ -225,7 +225,7 @@
 
             <div class="pure-g">
                 {% for result in results %}
-                <div class="pure-u-1 pure-u-md-1-4" style="padding:10px;">
+                <div class="pure-u-1 pure-u-md-1-4">
                     <div class="h-box">
                         {% if result["type"] == "video" %}
                         <a class="dynamic-link" href="{{ '/w' if vc == '1' else ('/ume' if vc == '2' else ('/edu' if vc == '3' else '/watch')) }}?v={{ result['id'] }}" style="width:100%">
@@ -252,13 +252,13 @@
                         {% elif result["type"] == "channel" %}
                         <a href="/channel/{{ result["id"] }}">
                             <center>
-                                <img loading="lazy" tabindex="-1" style="width:56.25%" src="{{ result["thumbnail"] }}">
+                                <img loading="lazy" tabindex="-1" src="{{ result["thumbnail"] }}">
                             </center>
                             <p dir="auto">{{ result["author"] }}</p>
                         </a>
 
                         {% elif result["type"] == "playlist" %}
-                        <a class="dynamic-link" style="width: 100%;" href="{{ '/w' if vc == '1' else ('/ume' if vc == '2' else ('/edu' if vc == '3' else '/watch')) }}?v={{ result['id'] }}">
+                        <a class="dynamic-link" href="/playlist?list={{ result["id"] }}">
                             <div class="thumbnail">
                                 <img loading="lazy" tabindex="-1" class="thumbnail" src="{{ result['thumbnail'] }}">
                                 <p class="length">{{ result["count"] }}個の動画</p>
