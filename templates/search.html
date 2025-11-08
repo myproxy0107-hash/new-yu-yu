@@ -44,74 +44,6 @@
         #topButton:active { transform: scale(0.95); background-color: #ff6347; }
 
         /* ---------- card / thumbnail visuals (non-invasive) ---------- */
-        a.dynamic-link {
-          display: block;
-          color: inherit;
-          text-decoration: none;
-          background: #fff;
-          border-radius: 10px;
-          overflow: hidden;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-          transition: transform 180ms ease, box-shadow 180ms ease;
-          border: 1px solid rgba(0,0,0,0.05);
-        }
-        a.dynamic-link:hover, a.dynamic-link:focus {
-          transform: translateY(-6px);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-          outline: none;
-        }
-        a.dynamic-link .thumbnail {
-          position: relative;
-          background: #000;
-          height: 0;
-          padding-bottom: 56.25%;
-          overflow: hidden;
-        }
-        a.dynamic-link .thumbnail img.thumbnail {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-          transition: transform 240ms ease;
-        }
-        a.dynamic-link:hover .thumbnail img.thumbnail { transform: scale(1.03); }
-        a.dynamic-link .length {
-          position: absolute;
-          right: 8px;
-          bottom: 8px;
-          background: rgba(0,0,0,0.75);
-          color: #fff;
-          padding: 4px 7px;
-          border-radius: 6px;
-          font-size: 0.8rem;
-          z-index: 3;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-        }
-        a.dynamic-link > p[dir="auto"] {
-          margin: 10px 12px 6px;
-          font-weight: 600;
-          color: #222;
-          font-size: 0.95rem;
-          line-height: 1.25;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .video-card-row.flexible {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 12px 10px;
-          gap: 8px;
-          color: #666;
-          font-size: 0.85rem;
-        }
-        .video-card-row.flexible a { color: #007BFF; text-decoration: none; font-weight: 500; }
-        .video-card-row.flexible a:hover { text-decoration: underline; }
-        .video-data { margin: 0; display: inline-block; color: #666; font-size: 0.82rem; }
 
         /* vc selector / status (kept minimal) */
         #vcStatus { display: inline-block; color: #444; font-size: 0.88rem; margin-left: 10px; vertical-align: middle; }
@@ -366,7 +298,7 @@
 <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
 
 <script>
-/* ---------- ヘルパー（既存と重複しないようあれば統合してください） ---------- */
+/* ---------- cookie helpers ---------- */
 function getCookie(name) {
   const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
   return v ? decodeURIComponent(v.pop()) : null;
@@ -378,9 +310,9 @@ function setCookie(name, value, days) {
   document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
 }
 
-/* ---------- vc -> path helper ---------- */
+/* ---------- vc path helper ---------- */
 function vcToPath(vc) {
-  switch(String(vc)) {
+  switch(vc) {
     case '1': return '/w';
     case '2': return '/ume';
     case '3': return '/edu';
@@ -388,113 +320,93 @@ function vcToPath(vc) {
   }
 }
 
-/* ---------- applyVcToLinks（リンクの href のみを書き換える。表示は変更しない） ---------- */
+/* ---------- link rewriting ---------- */
 function applyVcToLinks(vc) {
-  const resolvedVc = String(vc !== undefined && vc !== null ? vc : (getCookie('vc') || '0'));
-  const targetPath = vcToPath(resolvedVc);
-
-  // 対象セレクタ（必要なら追加）。この関数は href のみ変更し、DOM構造やクラス・スタイルは触りません。
-  const selectors = [
-    'a.dynamic-link',
-    'a.recommendation-link',
-    'a[href^="/watch"]',
-    'a[href^="/w"]',
-    'a[href^="/ume"]',
-    'a[href^="/edu"]'
-  ];
-
-  const elements = new Set();
-  selectors.forEach(sel => {
-    try { document.querySelectorAll(sel).forEach(el => elements.add(el)); }
-    catch(e) { /* invalid selector は無視 */ }
-  });
-
-  elements.forEach(a => {
+  const targetPath = vcToPath(vc);
+  const links = document.querySelectorAll('a.dynamic-link');
+  links.forEach(a => {
     try {
-      const originalHref = a.getAttribute('href') || '';
-      try {
-        const url = new URL(originalHref, window.location.origin);
-        const search = url.search || '';
-        url.pathname = targetPath;
-        a.setAttribute('href', url.pathname + search);
-      } catch (e) {
-        // フォールバック：? 以降を保持して path を置換
-        const idx = originalHref.indexOf('?');
-        const query = idx >= 0 ? originalHref.slice(idx) : '';
-        a.setAttribute('href', targetPath + query);
-      }
-    } catch (err) {
-      console.warn('applyVcToLinks skipped element', a, err);
+      const url = new URL(a.getAttribute('href'), window.location.origin);
+      url.pathname = targetPath;
+      a.setAttribute('href', url.pathname + url.search);
+    } catch (e) {
+      let href = a.getAttribute('href') || '';
+      const idx = href.indexOf('?');
+      const query = idx >= 0 ? href.slice(idx) : '';
+      a.setAttribute('href', targetPath + query);
     }
   });
-
-  // 表示用ステータスの更新（存在すれば）
   const st = document.getElementById('vcStatus');
   if (st) {
     let label = '';
-    switch (targetPath) {
-      case '/w':  label = '現在: 短縮パス /w'; break;
-      case '/ume': label = '現在: 埋め込み /ume'; break;
-      case '/edu': label = '現在: 別モード /edu'; break;
-      default:    label = '現在: フルパス /watch';
+    switch(vc) {
+      case '1': label = '現在: 短縮パス /w'; break;
+      case '2': label = '現在: 埋め込み /ume'; break;
+      case '3': label = '現在: 別モード /edu'; break;
+      default:  label = '現在: フルパス /watch';
     }
     st.textContent = label;
   }
 }
 
-/* ---------- video ページ時に現在の URL を即時更新する処理 ---------- */
-function updateCurrentVideoUrlPath(vc) {
-  // 対象ページかどうかを判定（/watch, /w, /ume, /edu のいずれかの場合）
-  const currentPath = window.location.pathname || '';
-  const isVideoPage = /^\/(watch|w|ume|edu)$/.test(currentPath);
-  if (!isVideoPage) return; // video.html 以外では何もしない
+/* ---------- DOM init ---------- */
+document.addEventListener('DOMContentLoaded', function() {
+  const serverVc = '{{ vc }}';
+  const cookieVc = getCookie('vc');
+  const vc = cookieVc !== null ? cookieVc : (serverVc || '0');
+  if (cookieVc === null) setCookie('vc', vc, 30);
 
-  // クエリ（?v=... 等）は保持する
-  const query = window.location.search || '';
-  const newPath = vcToPath(vc) + query;
+  // apply initial links
+  applyVcToLinks(vc);
 
-  // 履歴を残さずアドレスバーだけ書き換え
-  try {
-    history.replaceState(history.state, document.title, newPath);
-  } catch (e) {
-    // 古いブラウザではフォールバックして location.replace（ページリロード）を行わない方針なのでログのみ
-    console.warn('history.replaceState failed', e);
+  // settings elements
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+  const proxyToggle = document.getElementById('proxyToggle');
+  const vcSelectPanel = document.getElementById('vcSelectPanel');
+
+  // sync panel controls from cookies
+  if (vcSelectPanel) vcSelectPanel.value = vc;
+  const proxyCookie = getCookie('proxy') || ( '{{ proxy }}' === 'True' ? 'True' : null );
+  if (proxyCookie === 'True') proxyToggle.checked = true;
+
+  function openSettings() {
+    settingsPanel.classList.add('open');
+    settingsPanel.setAttribute('aria-hidden', 'false');
   }
-}
-
-/* ---------- setVcAndApply: 設定保存時にクッキー保存・リンク更新・video URL 即時反映を行うユーティリティ ---------- */
-function setVcAndApply(newVc) {
-  newVc = String(newVc);
-  setCookie('vc', newVc, 30);
-
-  // 1) ページ内のリンクを書き換え（表示はそのまま）
-  applyVcToLinks(newVc);
-
-  // 2) video ページなら今見ている URL を即時書き換える（アドレスバーのみ）
-  updateCurrentVideoUrlPath(newVc);
-
-  // 3) 見た目の通知（既存の showToast があれば利用）
-  if (typeof showToast === 'function') {
-    const modeLabel = (newVc === '1' ? '/w' : (newVc === '2' ? '/ume' : (newVc === '3' ? '/edu' : '/watch')));
-    showToast(modeLabel + ' に変更しました!!', '変更完了');
-  } else {
-    console.info('vc changed to', newVc);
+  function closeSettings() {
+    settingsPanel.classList.remove('open');
+    settingsPanel.setAttribute('aria-hidden', 'true');
   }
-}
 
-/* ---------- 使い方（既存の settings 保存ハンドラに組み込む例） ----------
-settingsSaveBtn.addEventListener('click', function(){
-  const newVc = vcSelectPanel.value;
-  // proxy は既存の処理に任せる
-  if (proxyToggle.checked) setCookie('proxy','True',30); else setCookie('proxy','False',30);
+  settingsToggle.addEventListener('click', function(e){
+    e.stopPropagation();
+    if (settingsPanel.classList.contains('open')) closeSettings();
+    else openSettings();
+  });
 
-  // 即時反映
-  setVcAndApply(newVc);
+  document.addEventListener('click', function(e){
+    if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) closeSettings();
+  });
 
-  // パネルを閉じる等の既存処理
-  closeSettings();
-});
-------------------------------------------------------------------- */
+  settingsSaveBtn.addEventListener('click', function(){
+    const newVc = vcSelectPanel.value;
+    setCookie('vc', newVc, 30);
+    applyVcToLinks(newVc);
+    if (proxyToggle.checked) setCookie('proxy', 'True', 30);
+    else setCookie('proxy', 'False', 30);
+    showToast('設定を保存しました!!');
+    closeSettings();
+  });
+
+  if (vcSelectPanel) {
+    vcSelectPanel.addEventListener('change', function(e){
+      const val = e.target.value;
+      const headerSel = document.getElementById('vcSelect');
+      if (headerSel) headerSel.value = val;
+    });
+  }
 
   // autocomplete and header behaviour
   $('#searchbox').autocomplete({
