@@ -258,7 +258,7 @@
                         </a>
 
                         {% elif result["type"] == "playlist" %}
-                        <a class="dynamic-link" href="/playlist?list={{ result["id"] }}">
+                        <a id="dynamic-link" href="/playlist?list={{ result["id"] }}">
                             <div class="thumbnail">
                                 <img loading="lazy" tabindex="-1" class="thumbnail" src="{{ result['thumbnail'] }}">
                                 <p class="length">{{ result["count"] }}個の動画</p>
