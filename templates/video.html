@@ -326,31 +326,6 @@
       /* ---------- 追加終わり ---------- */
     </style>
     <style>
-/* 説明文を使わない横並びレイアウト調整 */
-.settings-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.04); flex-wrap:wrap; }
-.settings-row > div:first-child { min-width:0; flex:1 1 auto; }
-.settings-row > div:last-child { flex:0 0 auto; min-width:80px; text-align:right; }
-
-/* ラベル内のチェックを左寄せで整列 */
-.settings-row label { display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
-
-/* チェックボックスの見た目微調整 */
-.settings-row input[type="checkbox"] { width:18px; height:18px; margin:0; padding:0; }
-
-/* 小さい画面でタイトルとコントロールが縦積みに近くならないようにする */
-@media (max-width:420px) {
-  .settings-row { align-items:flex-start; }
-  .settings-row > div:first-child { flex-basis:100%; }
-  .settings-row > div:last-child { flex-basis:100%; text-align:left; margin-top:8px; }
-  .settings-panel { padding:12px; max-height:calc(100vh - 72px); }
-  .settings-panel .save-btn { width:100%; box-sizing:border-box; }
-}
-
-/* スクロール領域の安定化 */
-.settings-panel { box-sizing:border-box; -webkit-overflow-scrolling:touch; }
-</style>
-
-    <style>
 /* ギア（左下） */
 .settings-toggle {
   position: fixed;
@@ -466,57 +441,43 @@
 
     
     <!-- 歯車ボタン（左下） -->
-<button class="settings-toggle" id="settingsToggle" aria-label="設定を開く" title="設定">
-  <span class="gear">⚙️</span>
-</button>
+    <button class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
+      <span class="gear">⚙️</span>
+    </button>
 
-<!-- 再生モード（そのまま） -->
-<div class="settings-row">
-  <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;">
-    <label for="vcSelectPanel" style="margin:0;font-weight:600;">再生モード</label>
-  </div>
-  <div style="flex:0 0 auto;">
-    <select id="vcSelectPanel" style="min-width:120px;">
-      <option value="0">/watch (フルパス)</option>
-      <option value="1">/w (短縮)</option>
-      <option value="2">/ume (埋め込み)</option>
-      <option value="3">/edu (別モード)</option>
-    </select>
-  </div>
-</div>
+    <!-- 設定パネル（歯車の上に立ち上がる） -->
+    <div class="settings-panel" id="settingsPanel" role="dialog" aria-hidden="true" aria-labelledby="settingsTitle">
+      <h4 id="settingsTitle">表示と再生の設定</h4>
 
-<!-- サムネイルプロキシ（チェックを題名の横に配置） -->
-<div class="settings-row">
-  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">
-    <label for="proxyToggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">
-      <input id="proxyToggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">
-      サムネイルプロキシ
-    </label>
-  </div>
-  <div style="flex:0 0 auto;"></div>
-</div>
+      <div class="settings-row">
+        <div>
+          <label for="vcSelectPanel">再生モード</label>
+          <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
+        </div>
+        <div>
+          <select id="vcSelectPanel" style="min-width:120px;">
+            <option value="0">/watch (フルパス)</option>
+            <option value="1">/w (短縮)</option>
+            <option value="2">/ume (埋め込み)</option>
+            <option value="3">/edu (別モード)</option>
+          </select>
+        </div>
+      </div>
 
-<!-- 自動で次の動画に遷移（チェックを題名の横に配置） -->
-<div class="settings-row">
-  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">
-    <label for="cp_autonext_toggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">
-      <input id="cp_autonext_toggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">
-      自動で次の動画に遷移
-    </label>
-  </div>
-  <div style="flex:0 0 auto;"></div>
-</div>
+      <div class="settings-row">
+        <div>
+          <label for="proxyToggle">サムネイルプロキシ</label>
+          <div class="desc">プロキシによるサムネイル取得をオンにします（クッキーで保存）</div>
+        </div>
+        <div>
+          <input id="proxyToggle" type="checkbox" />
+        </div>
+      </div>
 
-<!-- ループ再生（チェックを題名の横に配置） -->
-<div class="settings-row">
-  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">
-    <label for="cp_loop_toggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">
-      <input id="cp_loop_toggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">
-      ループ再生
-    </label>
-  </div>
-  <div style="flex:0 0 auto;"></div>
-</div>
+      <div style="padding-top:10px; text-align:right;">
+        <button id="settingsSaveBtn" style="padding:8px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#007BFF; color:#fff; cursor:pointer;">保存</button>
+      </div>
+    </div>
 
     <div class="no-theme">
       <!-- メインコンテンツ -->
