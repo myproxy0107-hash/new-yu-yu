@@ -325,6 +325,116 @@
 
       /* ---------- 追加終わり ---------- */
     </style>
+    <style>
+/* 説明文を使わない横並びレイアウト調整 */
+.settings-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.04); flex-wrap:wrap; }
+.settings-row > div:first-child { min-width:0; flex:1 1 auto; }
+.settings-row > div:last-child { flex:0 0 auto; min-width:80px; text-align:right; }
+
+/* ラベル内のチェックを左寄せで整列 */
+.settings-row label { display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
+
+/* チェックボックスの見た目微調整 */
+.settings-row input[type="checkbox"] { width:18px; height:18px; margin:0; padding:0; }
+
+/* 小さい画面でタイトルとコントロールが縦積みに近くならないようにする */
+@media (max-width:420px) {
+  .settings-row { align-items:flex-start; }
+  .settings-row > div:first-child { flex-basis:100%; }
+  .settings-row > div:last-child { flex-basis:100%; text-align:left; margin-top:8px; }
+  .settings-panel { padding:12px; max-height:calc(100vh - 72px); }
+  .settings-panel .save-btn { width:100%; box-sizing:border-box; }
+}
+
+/* スクロール領域の安定化 */
+.settings-panel { box-sizing:border-box; -webkit-overflow-scrolling:touch; }
+</style>
+
+    <style>
+/* ギア（左下） */
+.settings-toggle {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 140;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+}
+.settings-toggle .gear {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  color: #fff;
+  font-size: 20px;
+}
+
+/* 設定パネル（歯車の上に展開） */
+.settings-panel {
+  position: fixed;
+  bottom: 78px;
+  left: 18px;
+  width: 320px;
+  max-width: calc(100% - 36px);
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+  padding: 16px;
+  z-index: 139;
+  transform-origin: bottom left;
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
+  opacity: 0;
+  transform: translateY(10px) scale(.98);
+  pointer-events: none;
+}
+.settings-panel.open {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.settings-panel h4 { margin: 0 0 10px; font-size: 1rem; color: #222; }
+
+/* 行（各設定項目） */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row label { font-size: 0.92rem; color: #333; display: block; }
+.settings-row .desc { font-size: 0.8rem; color: #666; display:block; margin-top:6px; max-width: 190px; }
+
+/* 保存ボタン（パネル内右下） */
+.settings-panel .save-btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #007BFF;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* レスポンシブ */
+@media (max-width: 640px) {
+  .settings-toggle .gear { width: 40px; height: 40px; }
+  .settings-panel { width: calc(100% - 36px); left: 18px; right: 18px; }
+}
+</style>
+
 
     <!-- Font Awesome（アイコン用） -->
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
@@ -350,72 +460,63 @@
         <a href="/bbs">掲示板</a>
         <a href="/proxypage">Proxy</a>
         <a href="/others">その他</a>
-        <a href="/sitsumon">回答よろ</a>
+        <a href="/history">履歴閲覧</a>
       </nav>
     </header>
 
-    <!-- サイドバー -->
-    <div id="sidebar">
-      <button id="close-sidebar">×</button>
-      <div class="sidebar-content">
-        <a href="{{ videourls[0] }}" download="{{ video_title }}">ダウンロード</a>
-        <a href="javascript:togglePlayer(false);">デフォルトで視聴する</a>
-        <a href="javascript:togglePlayer(true);">埋め込み(nocookie)で視聴する</a>
-        <a href="javascript:location.replace('/w?v={{ videoid }}')">高画質で視聴する</a>
-        <a href="javascript:location.replace('/history')">履歴を閲覧</a>
-        <label for="autonextpage">
-          自動で次の動画に遷移
-          <input id="autonextpage" type="checkbox" onchange="changeAutoNextPage(this)">
-        </label>
-          <br>
-        <label for="loop">
-          ループ再生
-          <input id="loop" type="checkbox" onchange="changeLoop(this)">
-        </label>
-      </div>
-    </div>
-
-    <!-- オーバーレイ -->
-    <div id="overlay"></div>
-
+    
     <!-- 歯車ボタン（左下） -->
-    <button class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
-      <span class="gear">⚙️</span>
-    </button>
+<button class="settings-toggle" id="settingsToggle" aria-label="設定を開く" title="設定">
+  <span class="gear">⚙️</span>
+</button>
 
-    <!-- 設定パネル（歯車の上に立ち上がる） -->
-    <div class="settings-panel" id="settingsPanel" role="dialog" aria-hidden="true" aria-labelledby="settingsTitle">
-      <h4 id="settingsTitle">表示と再生の設定</h4>
+<!-- 再生モード（そのまま） -->
+<div class="settings-row">
+  <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;">
+    <label for="vcSelectPanel" style="margin:0;font-weight:600;">再生モード</label>
+  </div>
+  <div style="flex:0 0 auto;">
+    <select id="vcSelectPanel" style="min-width:120px;">
+      <option value="0">/watch (フルパス)</option>
+      <option value="1">/w (短縮)</option>
+      <option value="2">/ume (埋め込み)</option>
+      <option value="3">/edu (別モード)</option>
+    </select>
+  </div>
+</div>
 
-      <div class="settings-row">
-        <div>
-          <label for="vcSelectPanel">再生モード</label>
-          <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
-        </div>
-        <div>
-          <select id="vcSelectPanel" style="min-width:120px;">
-            <option value="0">/watch (フルパス)</option>
-            <option value="1">/w (短縮)</option>
-            <option value="2">/ume (埋め込み)</option>
-            <option value="3">/edu (別モード)</option>
-          </select>
-        </div>
-      </div>
+<!-- サムネイルプロキシ（チェックを題名の横に配置） -->
+<div class="settings-row">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">
+    <label for="proxyToggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">
+      <input id="proxyToggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">
+      サムネイルプロキシ
+    </label>
+  </div>
+  <div style="flex:0 0 auto;"></div>
+</div>
 
-      <div class="settings-row">
-        <div>
-          <label for="proxyToggle">サムネイルプロキシ</label>
-          <div class="desc">プロキシによるサムネイル取得をオンにします（クッキーで保存）</div>
-        </div>
-        <div>
-          <input id="proxyToggle" type="checkbox" />
-        </div>
-      </div>
+<!-- 自動で次の動画に遷移（チェックを題名の横に配置） -->
+<div class="settings-row">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">
+    <label for="cp_autonext_toggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">
+      <input id="cp_autonext_toggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">
+      自動で次の動画に遷移
+    </label>
+  </div>
+  <div style="flex:0 0 auto;"></div>
+</div>
 
-      <div style="padding-top:10px; text-align:right;">
-        <button id="settingsSaveBtn" style="padding:8px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#007BFF; color:#fff; cursor:pointer;">保存</button>
-      </div>
-    </div>
+<!-- ループ再生（チェックを題名の横に配置） -->
+<div class="settings-row">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">
+    <label for="cp_loop_toggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">
+      <input id="cp_loop_toggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">
+      ループ再生
+    </label>
+  </div>
+  <div style="flex:0 0 auto;"></div>
+</div>
 
     <div class="no-theme">
       <!-- メインコンテンツ -->
@@ -679,6 +780,179 @@
         }, 5000);
       });
     </script>
+    <script>
+(function(){
+  /* ヘルパー（既存の関数と衝突しないローカル実装） */
+  function gCookie(name){
+    const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return m ? decodeURIComponent(m.pop()) : null;
+  }
+  function sCookie(name, value, days){
+    const d = new Date(); d.setTime(d.getTime() + (days||30)*24*60*60*1000);
+    document.cookie = name + "=" + encodeURIComponent(value) + ";expires=" + d.toUTCString() + ";path=/";
+  }
+
+  /* vc -> path */
+  function vcToPath(vc) {
+    switch(String(vc)) {
+      case '1': return '/w';
+      case '2': return '/ume';
+      case '3': return '/edu';
+      default:  return '/watch';
+    }
+  }
+
+  /* ビデオページかどうか */
+  function isVideoPage() {
+    return /^\/(watch|w|ume|edu)$/.test(window.location.pathname || '');
+  }
+
+  /* 保存時に即遷移する処理（video ページのみ） */
+  function tryImmediateReplace(vcValue) {
+    if (!isVideoPage()) return;
+    try {
+      const query = window.location.search || '';
+      const target = vcToPath(vcValue) + query;
+      if (window.location.pathname !== vcToPath(vcValue)) {
+        // 履歴を残さず置き換えて遷移
+        location.replace(target);
+      }
+    } catch (e) {
+      console.warn('immediate replace failed', e);
+    }
+  }
+
+  /* パネルに自動遷移 / ループ行を追加し同期する */
+  function ensureAutoLoopControls() {
+    const settingsPanel = document.getElementById('settingsPanel');
+    if (!settingsPanel) return;
+
+    // 自動遷移 row
+    if (!document.getElementById('cp_autonext_row')) {
+      const autoRow = document.createElement('div');
+      autoRow.className = 'settings-row';
+      autoRow.id = 'cp_autonext_row';
+      autoRow.innerHTML = ''
+        + '<div><label for="cp_autonext_toggle">自動で次の動画に遷移</label><div class="desc">再生終了時に自動で次の動画へ</div></div>'
+        + '<div><input id="cp_autonext_toggle" type="checkbox"></div>';
+      // 保存ボタンの直前に挿入（存在しなければ末尾）
+      const saveBtnContainer = Array.from(settingsPanel.querySelectorAll('[style]')).reverse()
+        .find(el => el.querySelector && el.querySelector('#settingsSaveBtn'));
+      if (saveBtnContainer) settingsPanel.insertBefore(autoRow, saveBtnContainer);
+      else settingsPanel.appendChild(autoRow);
+    }
+
+    // ループ row
+    if (!document.getElementById('cp_loop_row')) {
+      const loopRow = document.createElement('div');
+      loopRow.className = 'settings-row';
+      loopRow.id = 'cp_loop_row';
+      loopRow.innerHTML = ''
+        + '<div><label for="cp_loop_toggle">ループ再生</label><div class="desc">動画を終わりまで再生したら先頭に戻して再生を繰り返す</div></div>'
+        + '<div><input id="cp_loop_toggle" type="checkbox"></div>';
+      const saveBtnContainer = Array.from(settingsPanel.querySelectorAll('[style]')).reverse()
+        .find(el => el.querySelector && el.querySelector('#settingsSaveBtn'));
+      if (saveBtnContainer) settingsPanel.insertBefore(loopRow, saveBtnContainer);
+      else settingsPanel.appendChild(loopRow);
+    }
+
+    // 要素参照
+    const cpAuto = document.getElementById('cp_autonext_toggle');
+    const cpLoop = document.getElementById('cp_loop_toggle');
+
+    // 初期同期（既存ページの要素があればその状態を優先）
+    try {
+      const pageAuto = document.getElementById('autonextpage');
+      const pageLoop = document.getElementById('loop');
+      if (cpAuto) {
+        if (pageAuto) cpAuto.checked = !!pageAuto.checked;
+        else cpAuto.checked = (gCookie('autonextpage') === 'true');
+      }
+      if (cpLoop) {
+        if (pageLoop) cpLoop.checked = !!pageLoop.checked;
+        else cpLoop.checked = (gCookie('loop') === 'true');
+      }
+    } catch (e) { console.warn(e); }
+
+    // 変更時の即時反映
+    if (cpAuto) {
+      cpAuto.addEventListener('change', function(){
+        const checked = !!cpAuto.checked;
+        sCookie('autonextpage', String(checked), 30);
+        const pageAuto = document.getElementById('autonextpage');
+        if (pageAuto) pageAuto.checked = checked;
+        if (typeof showToast === 'function') showToast(checked ? '自動遷移を有効化' : '自動遷移を無効化', '自動遷移');
+      });
+    }
+    if (cpLoop) {
+      cpLoop.addEventListener('change', function(){
+        const checked = !!cpLoop.checked;
+        sCookie('loop', String(checked), 30);
+        const player = document.getElementById('player');
+        if (player) player.loop = checked;
+        const pageLoop = document.getElementById('loop');
+        if (pageLoop) pageLoop.checked = checked;
+        if (typeof showToast === 'function') showToast(checked ? 'ループを有効化' : 'ループを無効化', 'ループ再生');
+      });
+    }
+
+    // 保存ボタン時にも確実に反映
+    const saveBtn = document.getElementById('settingsSaveBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function(){
+        setTimeout(function(){
+          try {
+            const cpAutoEl = document.getElementById('cp_autonext_toggle');
+            const cpLoopEl = document.getElementById('cp_loop_toggle');
+            if (cpAutoEl) {
+              sCookie('autonextpage', String(!!cpAutoEl.checked), 30);
+              const pageAuto = document.getElementById('autonextpage');
+              if (pageAuto) pageAuto.checked = !!cpAutoEl.checked;
+            }
+            if (cpLoopEl) {
+              sCookie('loop', String(!!cpLoopEl.checked), 30);
+              const player = document.getElementById('player');
+              if (player) player.loop = !!cpLoopEl.checked;
+              const pageLoop = document.getElementById('loop');
+              if (pageLoop) pageLoop.checked = !!cpLoopEl.checked;
+            }
+          } catch (e) { console.warn(e); }
+        }, 20);
+      }, false);
+    }
+  }
+
+  /* 保存ボタンが押されたときの追加処理（vc の即時遷移） */
+  function attachImmediateReplaceOnSave() {
+    const saveBtn = document.getElementById('settingsSaveBtn');
+    const vcSelect = document.getElementById('vcSelectPanel');
+    if (!saveBtn || !vcSelect) return;
+
+    // 追記リスナ（既存の保存処理を邪魔しないため少し遅延して実行）
+    saveBtn.addEventListener('click', function(){
+      setTimeout(function(){
+        try {
+          const newVc = String(vcSelect.value || '0');
+          // cookie 更新（冗長だが整合性確保）
+          sCookie('vc', newVc, 30);
+          // proxy cookie は既存の処理でも保存されている想定（ここでは触らない）
+          tryImmediateReplace(newVc);
+        } catch (e) {
+          console.warn('attachImmediateReplaceOnSave error', e);
+        }
+      }, 30);
+    }, false);
+  }
+
+  /* DOMContentLoaded で初期化 */
+  document.addEventListener('DOMContentLoaded', function(){
+    ensureAutoLoopControls();
+    attachImmediateReplaceOnSave();
+  });
+
+})();
+</script>
+
     
     <!-- 動画視聴ページ用の履歴登録スクリプト -->
     <script>
@@ -904,5 +1178,50 @@
         };
       })();
     </script>
+    <script>
+(function(){
+  // 設定パネル保存ボタンに後続処理を追加（既存ハンドラを壊さない）
+  document.addEventListener('DOMContentLoaded', function(){
+    const saveBtn = document.getElementById('settingsSaveBtn');
+    const vcSelect = document.getElementById('vcSelectPanel');
+    if (!saveBtn || !vcSelect) return;
+
+    // 追加リスナ（既存の処理があるならそれが先に走ることを期待）
+    saveBtn.addEventListener('click', function(ev){
+      // 少し遅らせて既存の保存処理を先に完了させる（setTimeout 0 でも OK）
+      setTimeout(function(){
+        try {
+          const newVc = String(vcSelect.value || '0');
+          // 保存（既存処理でも保存しているはずだが念のため）
+          const d = new Date(); d.setTime(d.getTime() + 30*24*60*60*1000);
+          document.cookie = 'vc=' + encodeURIComponent(newVc) + ';expires=' + d.toUTCString() + ';path=/';
+
+          // 現在が動画ページか判定
+          const currentPath = window.location.pathname || '';
+          if (!/^\/(watch|w|ume|edu)$/.test(currentPath)) return;
+
+          // クエリはそのまま保持
+          const query = window.location.search || '';
+
+          // vc 値に応じたパス
+          let targetPath = '/watch';
+          if (newVc === '1') targetPath = '/w';
+          else if (newVc === '2') targetPath = '/ume';
+          else if (newVc === '3') targetPath = '/edu';
+
+          // 既に同じパスであれば何もしない
+          if (window.location.pathname === targetPath) return;
+
+          // アドレスバーを置き換えて即遷移（ページを再読み込み）
+          // location.replace による遷移は履歴を残さない
+          location.replace(targetPath + query);
+        } catch (err) {
+          console.warn('vc immediate replace failed', err);
+        }
+      }, 20); // 既存処理との兼ね合いで少しだけ遅延
+    }, false);
+  });
+})();
+</script>
   </body>
 </html>
