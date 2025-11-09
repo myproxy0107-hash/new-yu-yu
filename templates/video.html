@@ -470,45 +470,52 @@
   <span class="gear">⚙️</span>
 </button>
 
-<!-- 設定パネル（歯車の上に表示） -->
-<div class="settings-panel" id="settingsPanel" role="dialog" aria-hidden="true" aria-labelledby="settingsTitle">
-  <h4 id="settingsTitle">表示と再生の設定</h4>
-
-  <div class="settings-row">
-    <div>
-      <label for="vcSelectPanel">再生モード</label>
-      <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
-    </div>
-    <div>
-      <select id="vcSelectPanel" style="min-width:120px;">
-        <option value="0">通常画質再生(stream)</option>
-        <option value="1">高画質再生(stream)</option>
-        <option value="2">画質変更可能再生(nocookie)</option>
-        <option value="3">追加予定</option>
-      </select>
-    </div>
+<!-- 再生モード（そのまま） -->
+<div class="settings-row">
+  <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;">
+    <label for="vcSelectPanel" style="margin:0;font-weight:600;">再生モード</label>
   </div>
-
-  <div class="settings-row" id="cp_autonext_row_inline">
-    <div>
-      <label for="cp_autonext_toggle_inline">自動で次の動画に遷移</label>
-      <div class="desc">再生終了時に自動で次の動画へ</div>
-    </div>
-    <div>
-      <input id="cp_autonext_toggle_inline" type="checkbox" />
-    </div>
-    <div>
-      <label for="cp_loop_toggle_inline">ループ再生</label>
-      <div class="desc">動画を終わりまで再生したら先頭に戻して再生を繰り返す</div>
-    </div>
-    <div>
-      <input id="cp_loop_toggle_inline" type="checkbox" />
-    </div>
+  <div style="flex:0 0 auto;">
+    <select id="vcSelectPanel" style="min-width:120px;">
+      <option value="0">/watch (フルパス)</option>
+      <option value="1">/w (短縮)</option>
+      <option value="2">/ume (埋め込み)</option>
+      <option value="3">/edu (別モード)</option>
+    </select>
   </div>
+</div>
 
-  <div style="padding-top:10px; text-align:right;">
-    <button id="settingsSaveBtn" class="save-btn">保存</button>
+<!-- サムネイルプロキシ（チェックを題名の横に配置） -->
+<div class="settings-row">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">
+    <label for="proxyToggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">
+      <input id="proxyToggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">
+      サムネイルプロキシ
+    </label>
   </div>
+  <div style="flex:0 0 auto;"></div>
+</div>
+
+<!-- 自動で次の動画に遷移（チェックを題名の横に配置） -->
+<div class="settings-row">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">
+    <label for="cp_autonext_toggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">
+      <input id="cp_autonext_toggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">
+      自動で次の動画に遷移
+    </label>
+  </div>
+  <div style="flex:0 0 auto;"></div>
+</div>
+
+<!-- ループ再生（チェックを題名の横に配置） -->
+<div class="settings-row">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">
+    <label for="cp_loop_toggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">
+      <input id="cp_loop_toggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">
+      ループ再生
+    </label>
+  </div>
+  <div style="flex:0 0 auto;"></div>
 </div>
 
     <div class="no-theme">
