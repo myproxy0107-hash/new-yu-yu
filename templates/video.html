@@ -441,43 +441,63 @@
 
     
     <!-- 歯車ボタン（左下） -->
-    <button class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
-      <span class="gear">⚙️</span>
-    </button>
+<button class="settings-toggle" id="settingsToggle" aria-label="設定を開く" title="設定">
+  <span class="gear">⚙️</span>
+</button>
 
-    <!-- 設定パネル（歯車の上に立ち上がる） -->
-    <div class="settings-panel" id="settingsPanel" role="dialog" aria-hidden="true" aria-labelledby="settingsTitle">
-      <h4 id="settingsTitle">表示と再生の設定</h4>
+<!-- 設定パネル（歯車の上に表示） -->
+<div class="settings-panel" id="settingsPanel" role="dialog" aria-hidden="true" aria-labelledby="settingsTitle">
+  <h4 id="settingsTitle">表示と再生の設定</h4>
 
-      <div class="settings-row">
-        <div>
-          <label for="vcSelectPanel">再生モード</label>
-          <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
-        </div>
-        <div>
-          <select id="vcSelectPanel" style="min-width:120px;">
-            <option value="0">/watch (フルパス)</option>
-            <option value="1">/w (短縮)</option>
-            <option value="2">/ume (埋め込み)</option>
-            <option value="3">/edu (別モード)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="settings-row">
-        <div>
-          <label for="proxyToggle">サムネイルプロキシ</label>
-          <div class="desc">プロキシによるサムネイル取得をオンにします（クッキーで保存）</div>
-        </div>
-        <div>
-          <input id="proxyToggle" type="checkbox" />
-        </div>
-      </div>
-
-      <div style="padding-top:10px; text-align:right;">
-        <button id="settingsSaveBtn" style="padding:8px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#007BFF; color:#fff; cursor:pointer;">保存</button>
-      </div>
+  <div class="settings-row">
+    <div>
+      <label for="vcSelectPanel">再生モード</label>
+      <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
     </div>
+    <div>
+      <select id="vcSelectPanel" style="min-width:120px;">
+        <option value="0">通常画質再生(stream)</option>
+        <option value="1">高画質再生(stream)</option>
+        <option value="2">画質変更可能再生(nocookie)</option>
+        <option value="3">追加予定</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="settings-row">
+    <div>
+      <label for="proxyToggle">サムネイルプロキシ</label>
+      <div class="desc">プロキシによるサムネイル取得をオンにします</div>
+    </div>
+    <div>
+      <input id="proxyToggle" type="checkbox" />
+    </div>
+  </div>
+
+  <div class="settings-row" id="cp_autonext_row_inline">
+    <div>
+      <label for="cp_autonext_toggle_inline">自動で次の動画に遷移</label>
+      <div class="desc">再生終了時に自動で次の動画へ</div>
+    </div>
+    <div>
+      <input id="cp_autonext_toggle_inline" type="checkbox" />
+    </div>
+  </div>
+
+  <div class="settings-row" id="cp_loop_row_inline">
+    <div>
+      <label for="cp_loop_toggle_inline">ループ再生</label>
+      <div class="desc">動画を終わりまで再生したら先頭に戻して再生を繰り返す</div>
+    </div>
+    <div>
+      <input id="cp_loop_toggle_inline" type="checkbox" />
+    </div>
+  </div>
+
+  <div style="padding-top:10px; text-align:right;">
+    <button id="settingsSaveBtn" class="save-btn">保存</button>
+  </div>
+</div>
 
     <div class="no-theme">
       <!-- メインコンテンツ -->
