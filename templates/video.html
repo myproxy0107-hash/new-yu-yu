@@ -1223,5 +1223,280 @@
   });
 })();
 </script>
+    <script>
+(function(){
+  // ---------- 汎用ヘルパー（単一定義） ----------
+  if (!window.__cp_helpers__) {
+    window.__cp_helpers__ = {
+      getCookie: function(name){
+        const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return m ? decodeURIComponent(m.pop()) : null;
+      },
+      setCookie: function(name, value, days){
+        const d = new Date(); d.setTime(d.getTime() + (days||30)*24*60*60*1000);
+        document.cookie = name + "=" + encodeURIComponent(value) + ";expires=" + d.toUTCString() + ";path=/";
+      },
+      vcToPath: function(vc) {
+        switch(String(vc)) {
+          case '1': return '/w';
+          case '2': return '/ume';
+          case '3': return '/edu';
+          default:  return '/watch';
+        }
+      },
+      isVideoPage: function() {
+        return /^\/(watch|w|ume|edu)$/.test(window.location.pathname || '');
+      }
+    };
+  }
+  const getCookie = window.__cp_helpers__.getCookie;
+  const setCookie = window.__cp_helpers__.setCookie;
+  const vcToPath = window.__cp_helpers__.vcToPath;
+  const isVideoPage = window.__cp_helpers__.isVideoPage;
+
+  // ---------- 安全な簡易トースト（既に showToast があれば使う） ----------
+  if (typeof window.showToast !== 'function') {
+    (function(){
+      const wrapId = 'toastWrap';
+      function ensureWrap(){
+        let w = document.getElementById(wrapId);
+        if (!w) {
+          w = document.createElement('div');
+          w.id = wrapId;
+          w.className = 'toast-wrap';
+          w.setAttribute('aria-live','polite');
+          w.setAttribute('aria-atomic','true');
+          document.body.appendChild(w);
+        }
+        return w;
+      }
+      function createToast(title, body, ttl){
+        const wrap = ensureWrap();
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.innerHTML = '<div class="close-x" aria-hidden="true">✕</div>'
+                     + '<div class="title">' + (title || '通知') + '</div>'
+                     + '<div class="body">' + (body || '') + '</div>';
+        wrap.appendChild(el);
+        requestAnimationFrame(()=> el.classList.add('show'));
+        const tid = setTimeout(()=> dismiss(el), typeof ttl === 'number' ? ttl : 3200);
+        el._tid = tid;
+        const cx = el.querySelector('.close-x');
+        if (cx) cx.addEventListener('click', function(e){ e.stopPropagation(); clearTimeout(el._tid); dismiss(el); });
+        function dismiss(node){
+          if (!node || !node.parentNode) return;
+          node.classList.remove('show');
+          node.style.opacity = '0';
+          if (node._tid) clearTimeout(node._tid);
+          setTimeout(()=> { try{ node.remove(); } catch(e){} }, 260);
+        }
+      }
+      window.showToast = function(body, title, ttl){ createToast(title || '通知', body || '', ttl); };
+    })();
+  }
+
+  // ---------- 重複イベントの安全化ユーティリティ ----------
+  function safeRemoveListeners(el){
+    try {
+      // try best-effort: if getEventListeners exists (Chrome devtools helper), use it
+      if (!el) return;
+      if (window.getEventListeners) {
+        const map = getEventListeners(el);
+        if (map && map.click) {
+          map.click.forEach(h => el.removeEventListener('click', h.listener));
+        }
+      }
+      // remove known attached wrapper if present
+      if (el.__cp_bound_click__) {
+        el.removeEventListener('click', el.__cp_bound_click__);
+        el.__cp_bound_click__ = null;
+      }
+    } catch(e){ /* noop */ }
+  }
+
+  // ---------- パネル内コントロールの同期と作成（存在しない場合のみ作る） ----------
+  function ensureControls() {
+    const panel = document.getElementById('settingsPanel');
+    if (!panel) return;
+
+    // If HTML already contains cp_autonext_toggle or cp_loop_toggle, don't create duplicates
+    if (!document.getElementById('cp_autonext_toggle')) {
+      // try to find an insertion point: before save button container or append
+      const autoRow = document.createElement('div');
+      autoRow.className = 'settings-row';
+      autoRow.innerHTML = '<div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">'
+                        + '<label for="cp_autonext_toggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">'
+                        + '<input id="cp_autonext_toggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">'
+                        + '自動で次の動画に遷移</label></div><div style="flex:0 0 auto;"></div>';
+      const saveBtn = panel.querySelector('#settingsSaveBtn');
+      if (saveBtn && saveBtn.parentNode) panel.insertBefore(autoRow, saveBtn.parentNode);
+      else panel.appendChild(autoRow);
+    }
+
+    if (!document.getElementById('cp_loop_toggle')) {
+      const loopRow = document.createElement('div');
+      loopRow.className = 'settings-row';
+      loopRow.innerHTML = '<div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;">'
+                        + '<label for="cp_loop_toggle" style="margin:0;font-weight:600;display:inline-flex;align-items:center;gap:8px;">'
+                        + '<input id="cp_loop_toggle" type="checkbox" style="width:18px;height:18px;margin:0;padding:0;vertical-align:middle;">'
+                        + 'ループ再生</label></div><div style="flex:0 0 auto;"></div>';
+      const saveBtn = panel.querySelector('#settingsSaveBtn');
+      if (saveBtn && saveBtn.parentNode) panel.insertBefore(loopRow, saveBtn.parentNode);
+      else panel.appendChild(loopRow);
+    }
+
+    // sync initial states: prefer existing page elements (autonextpage, loop) then cookie
+    try {
+      const cpAuto = document.getElementById('cp_autonext_toggle');
+      const cpLoop = document.getElementById('cp_loop_toggle');
+      const pageAuto = document.getElementById('autonextpage');
+      const pageLoop = document.getElementById('loop');
+
+      if (cpAuto) {
+        if (pageAuto) cpAuto.checked = !!pageAuto.checked;
+        else cpAuto.checked = (getCookie('autonextpage') === 'true');
+      }
+      if (cpLoop) {
+        if (pageLoop) cpLoop.checked = !!pageLoop.checked;
+        else cpLoop.checked = (getCookie('loop') === 'true');
+      }
+
+      // attach change handlers (idempotent)
+      if (cpAuto && !cpAuto.__cp_change_attached__) {
+        cpAuto.addEventListener('change', function(){
+          const checked = !!cpAuto.checked;
+          setCookie('autonextpage', String(checked), 30);
+          const pageAutoEl = document.getElementById('autonextpage');
+          if (pageAutoEl) pageAutoEl.checked = checked;
+          showToast(checked ? '自動遷移を有効化' : '自動遷移を無効化', '自動遷移');
+        });
+        cpAuto.__cp_change_attached__ = true;
+      }
+      if (cpLoop && !cpLoop.__cp_change_attached__) {
+        cpLoop.addEventListener('change', function(){
+          const checked = !!cpLoop.checked;
+          setCookie('loop', String(checked), 30);
+          const player = document.getElementById('player');
+          if (player) player.loop = checked;
+          const pageLoopEl = document.getElementById('loop');
+          if (pageLoopEl) pageLoopEl.checked = checked;
+          showToast(checked ? 'ループを有効化' : 'ループを無効化', 'ループ再生');
+        });
+        cpLoop.__cp_change_attached__ = true;
+      }
+    } catch(e){ console.warn('ensureControls sync failed', e); }
+  }
+
+  // ---------- settingsToggle の開閉再アタッチ（エラーで外れている場合に備える） ----------
+  function attachToggle() {
+    const toggle = document.getElementById('settingsToggle');
+    const panel = document.getElementById('settingsPanel');
+    if (!toggle || !panel) return;
+
+    // remove prior bound to avoid double
+    try { safeRemoveListeners(toggle); } catch(e){}
+
+    function onToggleClick(e){
+      e.stopPropagation();
+      panel.classList.toggle('open');
+      panel.setAttribute('aria-hidden', panel.classList.contains('open') ? 'false' : 'true');
+    }
+    // keep reference so we can remove later
+    toggle.__cp_bound_click__ = onToggleClick;
+    toggle.addEventListener('click', onToggleClick, false);
+
+    // close when clicking outside (ensure single handler)
+    if (!document.__cp_outside_click_attached__) {
+      document.addEventListener('click', function(ev){
+        try {
+          if (!panel.contains(ev.target) && !toggle.contains(ev.target)) {
+            panel.classList.remove('open');
+            panel.setAttribute('aria-hidden','true');
+          }
+        } catch(e){}
+      }, false);
+      document.__cp_outside_click_attached__ = true;
+    }
+  }
+
+  // ---------- settingsSaveBtn の統合ハンドラ（1つにまとめる） ----------
+  function attachUnifiedSaveHandler() {
+    const saveBtn = document.getElementById('settingsSaveBtn');
+    if (!saveBtn) return;
+
+    // remove previous duplicate listeners if we bound them before
+    try { safeRemoveListeners(saveBtn); } catch(e){}
+
+    // unified handler
+    function onSaveClick(e){
+      // run after any existing handlers attached earlier (we don't replace existing handlers that were attached before)
+      // but to be safe, run our finalization after a short delay
+      setTimeout(function(){
+        try {
+          // 1) read controls and write cookies (ensures consistency)
+          const vcSelect = document.getElementById('vcSelectPanel');
+          const cpAuto = document.getElementById('cp_autonext_toggle');
+          const cpLoop = document.getElementById('cp_loop_toggle');
+
+          const newVc = vcSelect ? String(vcSelect.value || '0') : '0';
+          setCookie('vc', newVc, 30);
+
+          if (cpAuto) setCookie('autonextpage', String(!!cpAuto.checked), 30);
+          if (cpLoop) setCookie('loop', String(!!cpLoop.checked), 30);
+
+          // 2) sync page elements if present
+          const pageAuto = document.getElementById('autonextpage');
+          if (pageAuto && cpAuto) pageAuto.checked = !!cpAuto.checked;
+          const pageLoop = document.getElementById('loop');
+          if (pageLoop && cpLoop) pageLoop.checked = !!cpLoop.checked;
+          const player = document.getElementById('player');
+          if (player && cpLoop) player.loop = !!cpLoop.checked;
+
+          // 3) show toast
+          try { showToast('設定を保存しました!!', '保存完了'); } catch(e){}
+
+          // 4) immediate replace if on video page
+          try {
+            if (isVideoPage()) {
+              const query = window.location.search || '';
+              const targetPath = vcToPath(newVc);
+              if (window.location.pathname !== targetPath) {
+                // replace (no history)
+                location.replace(targetPath + query);
+                return; // navigation initiated
+              }
+            }
+          } catch(e){ console.warn('immediate replace error', e); }
+
+        } catch(err) {
+          console.error('unified save handler error', err);
+        }
+      }, 30);
+    }
+
+    // attach but avoid adding duplicates
+    if (!saveBtn.__cp_save_attached__) {
+      saveBtn.addEventListener('click', onSaveClick, false);
+      saveBtn.__cp_save_attached__ = true;
+    }
+  }
+
+  // ---------- 初期化 ----------
+  function init() {
+    try {
+      ensureControls();
+      attachToggle();
+      attachUnifiedSaveHandler();
+    } catch(e){
+      console.warn('cp init failed', e);
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+})();
+</script>
+
   </body>
 </html>
