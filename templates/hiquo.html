@@ -404,9 +404,9 @@
             <div class="video-player-container">
   <div id="defaultPlayer" class="video-player-wrapper">
     <video id="player" controls playsinline preload="none">
-      {% for videourl in videourls %}
-        <source class="player-source" src="{{ videourl }}">
-      {% endfor %}
+      {% if highstream_url %}
+              <source id="videosrc" src="{{ highstream_url }}" type="video/webm">
+              {% endif %}
     </video>
     <div id="loader"></div>
   </div>
