@@ -417,6 +417,9 @@
         </div>
 
             <!-- 動画の説明 -->
+		    <audio id="audio" controls>
+	<source src="{{ videourls[0] }}" type="audio/mp3">
+	</audio>
             <div class="video-description" id="descriptionText">
               <a href="/channel/{{ author_id }}" style="display: inline-block; width: fit-content; width: -moz-fit-content">
             <div class="channel-profile">
@@ -459,9 +462,6 @@
         </div>
       </main>
     </div>
-	  <audio id="audio" controls>
-	<source src="{{ videourls[0] }}" type="audio/mp3">
-	</audio>
 
     <!-- Toast container -->
     <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
