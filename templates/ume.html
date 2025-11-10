@@ -942,6 +942,159 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+	  <script>
+document.addEventListener('DOMContentLoaded', function(){
+  const saveBtn = document.getElementById('settingsSaveBtn');
+  const vcSelect = document.getElementById('vcSelectPanel');
+  if (!saveBtn || !vcSelect) return;
+
+  // vc -> path
+  function vcToPath(vc) {
+    switch(String(vc)) {
+      case '1': return '/w';
+      case '2': return '/ume';
+      case '3': return '/edu';
+      default:  return '/watch';
+    }
+  }
+
+  // cookie 書き込み
+  function setVcCookie(val) {
+    const d = new Date();
+    d.setTime(d.getTime() + 30*24*60*60*1000);
+    document.cookie = 'vc=' + encodeURIComponent(String(val)) + ';expires=' + d.toUTCString() + ';path=/';
+  }
+
+  // showToast が存在しない場合に備えた最小実装
+  function ensureShowToastExists() {
+    if (typeof window.showToast === 'function') return;
+    window.showToast = function(message, title, ttl) {
+      const wrapId = 'toastWrap';
+      let wrap = document.getElementById(wrapId);
+      if (!wrap) {
+        wrap = document.createElement('div');
+        wrap.id = wrapId;
+        wrap.className = 'toast-wrap';
+        wrap.style.position = 'fixed';
+        wrap.style.top = '20px';
+        wrap.style.right = '20px';
+        wrap.style.zIndex = '150';
+        document.body.appendChild(wrap);
+      }
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.setAttribute('data-created', String(Date.now()));
+      el.innerHTML = '<div class="title">' + (title || '通知') + '</div><div class="body">' + (message || '') + '</div><div class="close-x" aria-hidden="true" style="position:absolute;right:8px;top:6px;cursor:pointer;">✕</div>';
+      wrap.appendChild(el);
+      requestAnimationFrame(()=> el.classList.add('show'));
+      const time = typeof ttl === 'number' ? ttl : 4200;
+      const tid = setTimeout(()=> {
+        try { el.remove(); } catch(e){}
+      }, time);
+      const cx = el.querySelector('.close-x');
+      if (cx) cx.addEventListener('click', function(e){ e.stopPropagation(); clearTimeout(tid); try{ el.remove(); }catch(_){} });
+    };
+  }
+
+  // showToast を呼び、実際に DOM に追加されたトースト要素を監視して Promise を返す
+  function showToastAsync(message, title, ttl) {
+    ensureShowToastExists();
+    return new Promise((resolve) => {
+      const wrap = document.getElementById('toastWrap') || (function(){ const w = document.createElement('div'); w.id='toastWrap'; w.className='toast-wrap'; document.body.appendChild(w); return w; })();
+      const before = Array.from(wrap.children);
+      // call existing toast
+      try { window.showToast(message, title, ttl); } catch(e){ console.warn('showToast failed', e); resolve(); return; }
+
+      // find newly added toast (wait up to 200ms if not immediate)
+      let newToast = null;
+      const findNew = () => {
+        const after = Array.from(wrap.children);
+        for (let el of after) if (!before.includes(el)) return el;
+        return null;
+      };
+      newToast = findNew();
+      const maxWaitForInsert = 300;
+      let waited = 0;
+      const pollInterval = 50;
+      const pollTimer = setInterval(() => {
+        newToast = findNew();
+        waited += pollInterval;
+        if (newToast || waited >= maxWaitForInsert) {
+          clearInterval(pollTimer);
+          if (!newToast) {
+            // If not found, fallback to waiting the ttl then resolve
+            setTimeout(resolve, typeof ttl === 'number' ? ttl : 4200);
+            return;
+          }
+          // Observe removal OR wait ttl
+          const ttlMs = typeof ttl === 'number' ? ttl : 4200;
+          let resolved = false;
+          // If the toast element is removed, resolve early
+          const mo = new MutationObserver(() => {
+            if (!document.body.contains(newToast)) {
+              if (!resolved) { resolved = true; mo.disconnect(); resolve(); }
+            }
+          });
+          mo.observe(document.body, { childList: true, subtree: true });
+          // Also watch for its removal from parent via periodic check (safety)
+          const checkTimer = setInterval(() => {
+            if (!document.body.contains(newToast)) {
+              if (!resolved) { resolved = true; clearInterval(checkTimer); mo.disconnect(); resolve(); }
+            }
+          }, 150);
+          // Fallback: resolve after ttl
+          setTimeout(() => {
+            if (!resolved) { resolved = true; clearInterval(checkTimer); mo.disconnect(); resolve(); }
+          }, ttlMs + 100); // small buffer
+        }
+      }, pollInterval);
+    });
+  }
+
+  // replace 実行
+  function doReplaceForVc(val) {
+    try {
+      const target = vcToPath(val);
+      const query = window.location.search || '';
+      if (window.location.pathname === target) return;
+      location.replace(target + query);
+    } catch(e){ console.warn('replace error', e); }
+  }
+
+  // attach unified save handler (avoid duplicates)
+  if (!saveBtn.__vc_postsave_attached__) {
+    saveBtn.addEventListener('click', function(){
+      // delay slightly so existing save logic runs first
+      setTimeout(async function(){
+        try {
+          const val = vcSelect.value || '0';
+          setVcCookie(val);
+
+          // show toast and wait until it disappears or TTL
+          // TTL: match your site's toast default if known; use 2000-4200ms typical.
+          const ttl = 2000;
+          await showToastAsync('設定を保存しました!!', '保存完了', ttl);
+
+          // after toast lifecycle completes, perform replace
+          doReplaceForVc(val);
+        } catch(e){
+          console.warn('post-save flow failed', e);
+        }
+      }, 40);
+    }, false);
+    saveBtn.__vc_postsave_attached__ = true;
+  }
+
+  // helper cookie writer used above
+  function setVcCookie(val) {
+    const d = new Date();
+    d.setTime(d.getTime() + 30*24*60*60*1000);
+    document.cookie = 'vc=' + encodeURIComponent(String(val)) + ';expires=' + d.toUTCString() + ';path=/';
+  }
+
+});
+</script>
+
 
   </body>
 </html>
