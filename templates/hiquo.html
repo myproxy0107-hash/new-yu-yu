@@ -399,22 +399,22 @@
     </div>
 
     <div class="no-theme">
-      <!-- メインコンテンツ -->
       <main class="main-content">
-        <div class="video-container">
-          <!-- 左カラム：動画プレーヤーとその下に動画説明、コメント -->
-          <div class="video-left">
-            <div class="video-player-container">
-  <div id="defaultPlayer" class="video-player-wrapper">
-    <video id="player" controls playsinline preload="none">
-      {% if highstream_url %}
+    <div class="video-container">
+      <!-- 左カラム：動画プレーヤーとその下に動画説明、コメント -->
+      <div class="video-left">
+        <div class="video-player-container">
+          <div class="video-player-wrapper">
+            <video id="videoPlayer" controls playsinline preload="none">
+		     
+                {% if highstream_url %}
               <source id="videosrc" src="{{ highstream_url }}" type="video/webm">
               {% endif %}
-    </video>
-    <div id="loader"></div>
-  </div>
-</div>
-
+              <p id="video_info">お使いのブラウザは動画の再生に対応していません。</p>
+	    </video>
+		           <div id="loader"></div>
+	  </div>
+        </div>
 
             <!-- 動画の説明 -->
             <div class="video-description" id="descriptionText">
