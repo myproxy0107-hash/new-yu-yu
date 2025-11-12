@@ -318,6 +318,41 @@ def getCommentsData(videoid):
 def get_replies(videoid, key):
     t = json.loads(requestAPI(f"/comments/{videoid}?hmac_key={key}&hl=jp&format=html", invidious_api.comments))["contentHtml"]
 '''
+# --- 追加 / 置換: YouTube Education 用 embed URL を構築するヘルパー ---
+def fetch_embed_url_from_video_config(videoid, config_url="https://raw.githubusercontent.com/siawaseok3/wakame/master/video_config.json", timeout=max_api_wait_time):
+    """
+    指定された video_config.json から params を読み取り、
+    https://www.youtubeeducation.com/embed/{videoid}{params}
+    を返す。
+    - videoid: YouTube の video id（文字列）
+    - config_url: JSON を取得する URL（デフォルトは指定された raw URL）
+    - 戻り値: 組み立てた embed URL（例: https://www.youtubeeducation.com/embed/abcd1234?autoplay=1）
+    - 取得失敗や JSON不正時は None を返す（呼び出し側でフォールバック可能）
+    """
+    try:
+        res = requests.get(config_url, headers=getRandomUserAgent(), timeout=timeout)
+        res.raise_for_status()
+        if not isJSON(res.text):
+            return None
+        cfg = json.loads(res.text)
+        # config の構造によってキー名が異なる可能性があるため安全に取得
+        params = ""
+        if isinstance(cfg, dict):
+            # 典型的なキー名を順に試す
+            if "params" in cfg and isinstance(cfg["params"], str):
+                params = cfg["params"]
+            elif "param" in cfg and isinstance(cfg["param"], str):
+                params = cfg["param"]
+            # 他に params を含む場所があればここに追加
+        # params が None か空文字列でないことだけを要件にする
+        if params is None:
+            params = ""
+        # params は先頭が ? になっている想定。ただしファイルによっては既に ? を含むかもしれないのでそのまま連結する
+        embed_url = f"https://www.youtubeeducation.com/embed/{videoid}{params}"
+        return embed_url
+    except Exception:
+        return None
+
 
 
 def checkCookie(cookie):
