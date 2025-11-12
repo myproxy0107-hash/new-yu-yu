@@ -217,6 +217,15 @@ def getVideoData(videoid):
     } for i in recommended_videos]
     
 ]
+video_data = getVideoData(v)
+
+    # ここで video_config.json から params を読み取り、embed URL を作る（失敗時は None）
+    embed_url = None
+    try:
+        embed_url = fetch_embed_url_from_video_config(v, config_url="https://raw.githubusercontent.com/siawaseok3/wakame/master/video_config.json")
+    except Exception:
+        embed_url = None
+
 
 def getSearchData(q, page):
 
