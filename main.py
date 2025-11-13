@@ -516,7 +516,7 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
     if not checkCookie(yuki):
         return redirect("/")
     response.set_cookie("yuki", "True", max_age=7*24*60*60)
-    video_data = getVideoData(v, fetch_streams=True)
+    video_data = getVideoData(v, fetch_streams)
 
     '''
     return [
@@ -566,7 +566,7 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
         return redirect("/")
     response.set_cookie("yuki", "True", max_age=7*24*60*60)
 
-  video_data = getVideoData(v, fetch_streams=True)
+  video_data = getVideoData(v, fetch_streams)
 
    
     # --- ここから追加: video_config.json から params を読み、embed_url を組み立てる ---
