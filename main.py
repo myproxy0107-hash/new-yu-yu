@@ -137,7 +137,7 @@ def getInfo(request):
 
 failed = "Load Failed"
 
-def getVideoData(videoid, fetch_streams=True):
+def getVideoData(videoid):
     t = json.loads(requestAPI(f"/videos/{urllib.parse.quote(videoid)}", invidious_api.video))
 
     # 推奨動画の情報（キー名の違いに対応）
@@ -155,73 +155,68 @@ def getVideoData(videoid, fetch_streams=True):
             "viewCountText": "Load Failed"
         }]
 
-    # 基本データ（常に返す）
-    base = {
-        'description_html': t.get("descriptionHtml", "").replace("\n", "<br>"),
-        'title': t.get("title", failed),
-        'length_text': str(datetime.timedelta(seconds=t.get("lengthSeconds", 0))),
-        'author_id': t.get("authorId", failed),
-        'author': t.get("author", failed),
-        'author_thumbnails_url': (t.get("authorThumbnails") or [{"url": failed}])[-1].get("url", failed),
-        'view_count': t.get("viewCount", 0),
-        'like_count': t.get("likeCount", 0),
-        'subscribers_count': t.get("subCountText", failed)
-    }
+    # 【新規追加】adaptiveFormats から高画質動画と音声の URL を抽出する
+    adaptiveFormats = t.get("adaptiveFormats", [])
+    highstream_url = None
+    audio_url = None
 
-    # ストリーム情報を付けるかどうか
-    if fetch_streams:
-        # formatStreams の上位2件（逆順）
-        video_urls = []
-        if "formatStreams" in t and isinstance(t["formatStreams"], list):
-            video_urls = list(reversed([i["url"] for i in t["formatStreams"] if "url" in i]))[:2]
-        base['video_urls'] = video_urls
-
-        # adaptiveFormats から高画質・音声・streamUrls を抽出
-        adaptiveFormats = t.get("adaptiveFormats", [])
-        highstream_url = None
-        audio_url = None
-
+    # 高画質: container == 'webm' かつ resolution == '1080p' のストリーム
+    for stream in adaptiveFormats:
+        if stream.get("container") == "webm" and stream.get("resolution") == "1080p":
+            highstream_url = stream.get("url")
+            break
+    if not highstream_url:
         for stream in adaptiveFormats:
-            if stream.get("container") == "webm" and stream.get("resolution") == "1080p":
+            if stream.get("container") == "webm" and stream.get("resolution") == "720p":
                 highstream_url = stream.get("url")
                 break
-        if not highstream_url:
-            for stream in adaptiveFormats:
-                if stream.get("container") == "webm" and stream.get("resolution") == "720p":
-                    highstream_url = stream.get("url")
-                    break
 
-        for stream in adaptiveFormats:
-            if stream.get("container") == "m4a" and stream.get("audioQuality") == "AUDIO_QUALITY_MEDIUM":
-                audio_url = stream.get("url")
-                break
 
-        streamUrls = [
-            {
-                'url': stream['url'],
-                'resolution': stream['resolution']
-            }
-            for stream in adaptiveFormats
-            if stream.get('container') == 'webm' and stream.get('resolution') and 'url' in stream
-        ]
+    # 音声: container == 'm4a' かつ audioQuality == 'AUDIO_QUALITY_MEDIUM' のストリーム
+    for stream in adaptiveFormats:
+        if stream.get("container") == "m4a" and stream.get("audioQuality") == "AUDIO_QUALITY_MEDIUM":
+            audio_url = stream.get("url")
+            break
 
-        base['highstream_url'] = highstream_url
-        base['audio_url'] = audio_url
-        base['streamUrls'] = streamUrls
-
-    # 推奨動画リストは常に返す
-    recommended = [
+    adaptive = t.get('adaptiveFormats', [])
+    streamUrls = [
         {
-            "video_id": i.get("videoId", failed),
-            "title": i.get("title", failed),
-            "author_id": i.get("authorId", failed),
-            "author": i.get("author", failed),
-            "length_text": str(datetime.timedelta(seconds=i.get("lengthSeconds", 0))),
-            "view_count_text": i.get("viewCountText", failed)
-        } for i in recommended_videos
+            'url': stream['url'],
+            'resolution': stream['resolution']
+        }
+        for stream in adaptive
+        if stream.get('container') == 'webm' and stream.get('resolution')
     ]
+    return [
+      {
+        # 既存処理（ここでは formatStreams のURLを逆順にして上位2件を使用）
+        'video_urls': list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
+        # 追加：高画質動画と音声のURL
+        'highstream_url': highstream_url,
+        'audio_url': audio_url,
+        'description_html': t["descriptionHtml"].replace("\n", "<br>"),
+        'title': t["title"],
+        'length_text': str(datetime.timedelta(seconds=t["lengthSeconds"])),
+        'author_id': t["authorId"],
+        'author': t["author"],
+        'author_thumbnails_url': t["authorThumbnails"][-1]["url"],
+        'view_count': t["viewCount"],
+        'like_count': t["likeCount"],
+        'subscribers_count': t["subCountText"],
+        'streamUrls': streamUrls
+    },
 
-    return [base, recommended]
+    [
+      {
+        "video_id": i["videoId"],
+        "title": i["title"],
+        "author_id": i["authorId"],
+        "author": i["author"],
+        "length_text": str(datetime.timedelta(seconds=i["lengthSeconds"])),
+        "view_count_text": i["viewCountText"]
+    } for i in recommended_videos]
+    
+]
 
 def getSearchData(q, page):
 
@@ -510,14 +505,12 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
         "recommended_videos": video_data[1],
         "proxy":proxy
     })
-
 @app.get('/ume', response_class=HTMLResponse)
 def ume_video(v: str, response: Response, request: Request, yuki: Union[str, None] = Cookie(None), proxy: Union[str, None] = Cookie(None)):
     if not checkCookie(yuki):
         return redirect("/")
     response.set_cookie("yuki", "True", max_age=7*24*60*60)
-    video_data = getVideoData(v, fetch_streams)
-
+    video_data = getVideoData(v)
     '''
     return [
         {
@@ -565,33 +558,32 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
     if not checkCookie(yuki):
         return redirect("/")
     response.set_cookie("yuki", "True", max_age=7*24*60*60)
-
-  video_data = getVideoData(v, fetch_streams)
-
-   
-    # --- ここから追加: video_config.json から params を読み、embed_url を組み立てる ---
-    embed_url = None
-    try:
-        # 指定された raw JSON を使う（要求どおりの URL）
-        cfg_res = requests.get("https://raw.githubusercontent.com/siawaseok3/wakame/master/video_config.json", headers=getRandomUserAgent(), timeout=max_api_wait_time)
-        cfg_res.raise_for_status()
-        if isJSON(cfg_res.text):
-            cfg = json.loads(cfg_res.text)
-            params = ""
-            if isinstance(cfg, dict):
-                if "params" in cfg and isinstance(cfg["params"], str):
-                    params = cfg["params"]
-                elif "param" in cfg and isinstance(cfg["param"], str):
-                    params = cfg["param"]
-            if params is None:
-                params = ""
-            # 組み立て: 必ず https://www.youtubeeducation.com/embed/{videoid}{params}
-            embed_url = f"https://www.youtubeeducation.com/embed/{v}{params}"
-    except Exception:
-        # 失敗時は embed_url を None にして従来フローを維持
-        embed_url = None
-    # --- ここまで追加 ---
-
+    video_data = getVideoData(v)
+    '''
+    return [
+        {
+            'video_urls': list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
+            'description_html': t["descriptionHtml"].replace("\n", "<br>"),
+            'title': t["title"],
+            'length_text': str(datetime.timedelta(seconds=t["lengthSeconds"]))
+            'author_id': t["authorId"],
+            'author': t["author"],
+            'author_thumbnails_url': t["authorThumbnails"][-1]["url"],
+            'view_count': t["viewCount"],
+            'like_count': t["likeCount"],
+            'subscribers_count': t["subCountText"]
+        },
+        [
+            {
+                "title": i["title"],
+                "author_id": i["authorId"],
+                "author": i["author"],
+                "length_text": str(datetime.timedelta(seconds=i["lengthSeconds"])),
+                "view_count_text": i["viewCountText"]
+            } for i in recommended_videos
+        ]
+    ]
+    '''
     response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
     return template('edu.html', {
         "request": request,
@@ -607,10 +599,8 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
         "like_count": video_data[0]['like_count'],
         "subscribers_count": video_data[0]['subscribers_count'],
         "recommended_videos": video_data[1],
-        "proxy": proxy,
-        "embed_url": embed_url
+        "proxy":proxy
     })
-
   
 @app.get("/search", response_class=HTMLResponse)
 def search(q: str, response: Response, request: Request, page: Union[int, None] = 1,
