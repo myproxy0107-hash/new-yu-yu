@@ -1,5 +1,6 @@
 .cookie-notice {
-    max-width: 90%;
+    position: fixed; 
+    max-width: 40%;
     background-color: rgba(0, 0, 0, 0.8);
     color: #fff;
     padding: 15px;
