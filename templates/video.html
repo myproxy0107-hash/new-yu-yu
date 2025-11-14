@@ -372,10 +372,10 @@
         </div>
         <div>
           <select id="vcSelectPanel" style="min-width:120px;">
-                    <option value="0">stream再生</option>
-        <option value="1">高画質再生</option>
-        <option value="2">埋め込み再生(nocookie)</option>
-        <option value="3">埋め込み再生(education)おすすめ</option>
+         <option value="1">stream再生</option>
+        <option value="2">高画質再生</option>
+        <option value="3">nocookie</option>
+        <option value="0">education</option>
           </select>
         </div>
       </div>
@@ -889,10 +889,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function vcToPath(vc) {
     switch(String(vc)) {
-      case '1': return '/w';
-      case '2': return '/ume';
-      case '3': return '/edu';
-      default:  return '/watch';
+      case '1': return '/watch';
+      case '2': return '/w';
+      case '3': return '/ume';
+      default:  return '/edu';
     }
   }
 
@@ -962,10 +962,10 @@ document.addEventListener('DOMContentLoaded', function(){
   // vc -> path
   function vcToPath(vc) {
     switch(String(vc)) {
-      case '1': return '/w';
-      case '2': return '/ume';
-      case '3': return '/edu';
-      default:  return '/watch';
+      case '1': return '/watch';
+      case '2': return '/w';
+      case '3': return '/ume';
+      default:  return '/edu';
     }
   }
 
