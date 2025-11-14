@@ -372,10 +372,10 @@
         </div>
         <div>
           <select id="vcSelectPanel" style="min-width:120px;">
-            <option value="0">/watch (フルパス)</option>
-            <option value="1">/w (短縮)</option>
-            <option value="2">/ume (埋め込み)</option>
-            <option value="3">/edu (別モード)</option>
+            <option value="1">stream再生</option>
+        <option value="2">高画質再生</option>
+        <option value="3">nocookie</option>
+        <option value="0">education</option>
           </select>
         </div>
       </div>
@@ -878,10 +878,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function vcToPath(vc) {
     switch(String(vc)) {
-      case '1': return '/w';
-      case '2': return '/ume';
-      case '3': return '/edu';
-      default:  return '/watch';
+      case '1': return '/watch';
+      case '2': return '/w';
+      case '3': return '/ume';
+      default:  return '/edu';
     }
   }
 
@@ -904,23 +904,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // select の変更で即時反映（cookie 記録と遷移）
-  if (vcSelect) {
-    vcSelect.addEventListener('change', function () {
-      const val = vcSelect.value;
-      setVcCookie(val);
-      replaceToVcPath(val);
-    });
-  }
-
-  // 保存ボタンでも反映（既存の保存処理を優先するため短い遅延で実行）
-  if (saveBtn) {
-    saveBtn.addEventListener('click', function () {
-      const val = vcSelect ? vcSelect.value : '0';
-      setVcCookie(val);
-      setTimeout(function () { replaceToVcPath(val); }, 40);
-    });
-  }
 
   // ページ読み込み時に cookie に従ってパスを合わせたい場合（任意）
   // 例えばページに来た時点で cookie が /ume を指定していれば自動で置き換えたい場合は有効にする：
@@ -951,10 +934,10 @@ document.addEventListener('DOMContentLoaded', function(){
   // vc -> path
   function vcToPath(vc) {
     switch(String(vc)) {
-      case '1': return '/w';
-      case '2': return '/ume';
-      case '3': return '/edu';
-      default:  return '/watch';
+      case '1': return '/watch';
+      case '2': return '/w';
+      case '3': return '/ume';
+      default:  return '/edu';
     }
   }
 
