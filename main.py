@@ -620,7 +620,6 @@ def search(q: str, response: Response, request: Request, page: Union[int, None] 
         "next": f"/search?q={q}&page={page + 1}",
         "proxy": proxy,
         "vc": vc_cookie
-        "embed_url": embed_url
     })
 @app.get("/hashtag/{tag}")
 def search(tag:str, response: Response, request: Request, page:Union[int, None]=1, yuki: Union[str] = Cookie(None)):
