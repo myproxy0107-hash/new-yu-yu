@@ -603,6 +603,25 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
         "proxy": proxy,
         "embed_url": embed_url
     })
+@app.get("/search", response_class=HTMLResponse)
+def search(q: str, response: Response, request: Request, page: Union[int, None] = 1,
+           yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
+    if not(checkCookie(yuki)):
+        return redirect("/")
+    response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
+
+    # クッキー vc を取得（無ければ '0' をデフォルト）
+    vc_cookie = request.cookies.get("vc", "0")
+
+    return template("search.html", {
+        "request": request,
+        "results": getSearchData(q, page),
+        "word": q,
+        "next": f"/search?q={q}&page={page + 1}",
+        "proxy": proxy,
+        "vc": vc_cookie
+        "embed_url": embed_url
+    })
 @app.get("/hashtag/{tag}")
 def search(tag:str, response: Response, request: Request, page:Union[int, None]=1, yuki: Union[str] = Cookie(None)):
     if not(checkCookie(yuki)):
