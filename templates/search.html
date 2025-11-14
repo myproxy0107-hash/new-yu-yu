@@ -181,10 +181,10 @@
     </div>
     <div>
       <select id="vcSelectPanel" style="min-width:120px;">
-        <option value="0">stream再生</option>
-        <option value="1">高画質再生</option>
-        <option value="2">nocookie</option>
-        <option value="3">education</option>
+        <option value="0">education</option>
+        <option value="1">stream再生</option>
+        <option value="2">高画質再生</option>
+        <option value="3">nocookie</option>
       </select>
     </div>
   </div>
@@ -228,7 +228,7 @@
                 <div class="pure-u-1 pure-u-md-1-4">
                     <div class="h-box">
                         {% if result["type"] == "video" %}
-                        <a class="dynamic-link" href="{{ '/w' if vc == '1' else ('/ume' if vc == '2' else ('/edu' if vc == '3' else '/watch')) }}?v={{ result['id'] }}" style="width:100%">
+                        <a class="dynamic-link" href="{{ '/watch' if vc == '1' else ('/w' if vc == '2' else ('/ume' if vc == '3' else '/edu')) }}?v={{ result['id'] }}" style="width:100%">
                             <div class="thumbnail">
                                 <img class="thumbnail" loading="lazy"
                                      src="{% if proxy == 'True' %}/thumbnail?v={{ result['id'] }}{% else %}https://img.youtube.com/vi/{{ result['id'] }}/0.jpg{% endif %}"
