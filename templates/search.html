@@ -302,10 +302,10 @@ function setCookie(name, value, days) {
 /* ---------- vc path helper ---------- */
 function vcToPath(vc) {
   switch(vc) {
-    case '1': return '/w';
-    case '2': return '/ume';
-    case '3': return '/edu';
-    default:  return '/watch';
+    case '1': return '/wach';
+    case '2': return '/w';
+    case '3': return '/ume';
+    default:  return '/edu';
   }
 }
 
@@ -329,10 +329,10 @@ function applyVcToLinks(vc) {
   if (st) {
     let label = '';
     switch(vc) {
-      case '1': label = '現在: 短縮パス /w'; break;
-      case '2': label = '現在: 埋め込み /ume'; break;
-      case '3': label = '現在: 別モード /edu'; break;
-      default:  label = '現在: フルパス /watch';
+      case '1': label = '現在: stream再生中'; break;
+      case '2': label = '現在: 高画質再生'; break;
+      case '3': label = '現在: nocookie'; break;
+      default:  label = '現在: education';
     }
     st.textContent = label;
   }
