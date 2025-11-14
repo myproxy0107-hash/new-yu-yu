@@ -558,33 +558,32 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
     if not checkCookie(yuki):
         return redirect("/")
     response.set_cookie("yuki", "True", max_age=7*24*60*60)
-
-    # 既存の動画データ取得（変更なし）
     video_data = getVideoData(v)
-
-    # --- ここから追加: video_config.json から params を読み、embed_url を組み立てる ---
-    embed_url = None
-    try:
-        # 指定された raw JSON を使う（要求どおりの URL）
-        cfg_res = requests.get("https://raw.githubusercontent.com/siawaseok3/wakame/master/video_config.json", headers=getRandomUserAgent(), timeout=max_api_wait_time)
-        cfg_res.raise_for_status()
-        if isJSON(cfg_res.text):
-            cfg = json.loads(cfg_res.text)
-            params = ""
-            if isinstance(cfg, dict):
-                if "params" in cfg and isinstance(cfg["params"], str):
-                    params = cfg["params"]
-                elif "param" in cfg and isinstance(cfg["param"], str):
-                    params = cfg["param"]
-            if params is None:
-                params = ""
-            # 組み立て: 必ず https://www.youtubeeducation.com/embed/{videoid}{params}
-            embed_url = f"https://www.youtubeeducation.com/embed/{v}{params}"
-    except Exception:
-        # 失敗時は embed_url を None にして従来フローを維持
-        embed_url = None
-    # --- ここまで追加 ---
-
+    '''
+    return [
+        {
+            'video_urls': list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
+            'description_html': t["descriptionHtml"].replace("\n", "<br>"),
+            'title': t["title"],
+            'length_text': str(datetime.timedelta(seconds=t["lengthSeconds"]))
+            'author_id': t["authorId"],
+            'author': t["author"],
+            'author_thumbnails_url': t["authorThumbnails"][-1]["url"],
+            'view_count': t["viewCount"],
+            'like_count': t["likeCount"],
+            'subscribers_count': t["subCountText"]
+        },
+        [
+            {
+                "title": i["title"],
+                "author_id": i["authorId"],
+                "author": i["author"],
+                "length_text": str(datetime.timedelta(seconds=i["lengthSeconds"])),
+                "view_count_text": i["viewCountText"]
+            } for i in recommended_videos
+        ]
+    ]
+    '''
     response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
     return template('edu.html', {
         "request": request,
@@ -600,8 +599,26 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
         "like_count": video_data[0]['like_count'],
         "subscribers_count": video_data[0]['subscribers_count'],
         "recommended_videos": video_data[1],
+        "proxy":proxy
+    })
+  
+@app.get("/search", response_class=HTMLResponse)
+def search(q: str, response: Response, request: Request, page: Union[int, None] = 1,
+           yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
+    if not(checkCookie(yuki)):
+        return redirect("/")
+    response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
+
+    # クッキー vc を取得（無ければ '0' をデフォルト）
+    vc_cookie = request.cookies.get("vc", "0")
+
+    return template("search.html", {
+        "request": request,
+        "results": getSearchData(q, page),
+        "word": q,
+        "next": f"/search?q={q}&page={page + 1}",
         "proxy": proxy,
-        "embed_url": embed_url
+        "vc": vc_cookie
     })
 @app.get("/hashtag/{tag}")
 def search(tag:str, response: Response, request: Request, page:Union[int, None]=1, yuki: Union[str] = Cookie(None)):
