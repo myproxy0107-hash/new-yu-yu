@@ -42,6 +42,114 @@ body {
       0% { opacity: 0; transform: translateY(-20px); }
       100% { opacity: 1; transform: translateY(0); }
     }
+       .counter-card {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background-color: rgba(255, 255, 255, 0.8);
+      color: black;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      z-index: 30;
+      width: 200px;
+      /* ドラッグさせないためにカーソルを変更 */
+      cursor: default;
+
+      /* CSSで「浮遊」するアニメーション */
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* 「浮遊」アニメーション用のキーフレーム */
+    @keyframes float {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes fadeInDown {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+	            
+
+ 
+    
+    /* ダミーコンテンツ用 */
+    .content {
+      margin-top: 80px;
+      padding: 20px;
+      line-height: 1.6;
+    }
+/* 最新情報欄の基本スタイル（雰囲気づけたデザイン例） */
+.latest-info {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 220px;
+  background: linear-gradient(135deg, #fdfbfb, #ebedee);
+  border-left: 4px solid #007bff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 40;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  animation: fadeIn 1s ease-out;
+}
+
+/* 見出しにアクセント */
+.latest-info h3 {
+  margin: 0 0 10px;
+  padding-bottom: 5px;
+  font-size: 18px;
+  color: #007bff;
+  border-bottom: 1px solid #007bff;
+}
+
+/* 本文のスタイル */
+.latest-info p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+}
+
+/* フェードインのキーフレーム */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* タブレットサイズ以下（幅768px以下）の設定 */
+@media (max-width: 768px) {
+  .latest-info {
+    width: 35%;
+    right: 5%;
+    bottom: 15px;
+    padding: 12px;
+  }
+  .latest-info h3 {
+    font-size: 16px;
+  }
+  .latest-info p {
+    font-size: 13px;
+  }
+}
+
+/* スマートフォンサイズ以下（幅480px以下）の設定 */
+@media (max-width: 480px) {
+  .latest-info {
+    width: 80%;
+    right: 5%;
+    bottom: 10px;
+    padding: 10px;
+  }
+  .latest-info h3 {
+    font-size: 14px;
+  }
+  .latest-info p {
+    font-size: 12px;
+  }
+}
     
     /* ロゴ */
     .navbar-logo img {
@@ -763,3 +871,4 @@ p,
         .navbar-logo img {
           width: 8%;
         }
+
