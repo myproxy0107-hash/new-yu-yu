@@ -372,10 +372,10 @@
         </div>
         <div>
           <select id="vcSelectPanel" style="min-width:120px;">
-                    <option value="0">stream再生</option>
-        <option value="1">高画質再生</option>
-        <option value="2">埋め込み再生(nocookie)</option>
-        <option value="3">埋め込み再生(education)おすすめ</option>
+                 <option value="1">stream再生</option>
+        <option value="2">高画質再生</option>
+        <option value="3">nocookie</option>
+        <option value="0">education</option>
           </select>
         </div>
       </div>
@@ -878,10 +878,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function vcToPath(vc) {
     switch(String(vc)) {
-      case '1': return '/w';
-      case '2': return '/ume';
-      case '3': return '/edu';
-      default:  return '/watch';
+      case '1': return '/watch';
+      case '2': return '/w';
+      case '3': return '/ume';
+      default:  return '/edu';
     }
   }
 
@@ -902,15 +902,6 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) {
       console.warn('vc replace failed', e);
     }
-  }
-
-  // select の変更で即時反映（cookie 記録と遷移）
-  if (vcSelect) {
-    vcSelect.addEventListener('change', function () {
-      const val = vcSelect.value;
-      setVcCookie(val);
-      replaceToVcPath(val);
-    });
   }
 
   // 保存ボタンでも反映（既存の保存処理を優先するため短い遅延で実行）
@@ -951,10 +942,10 @@ document.addEventListener('DOMContentLoaded', function(){
   // vc -> path
   function vcToPath(vc) {
     switch(String(vc)) {
-      case '1': return '/w';
-      case '2': return '/ume';
-      case '3': return '/edu';
-      default:  return '/watch';
+      case '1': return '/watch';
+      case '2': return '/w';
+      case '3': return '/ume';
+      default:  return '/edu';
     }
   }
 
