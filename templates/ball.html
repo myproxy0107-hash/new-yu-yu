@@ -87,6 +87,8 @@
     <button id="normalBtn">普通</button>
     <button id="hardBtn">難しい</button>
     <button id="ultraBtn">超難しい</button>
+    <button id="fuckerBtn">鬼難しい</button>
+    
   </div>
   
   <!-- ゲームキャンバス -->
@@ -285,8 +287,11 @@
         ballInitSpeed = 10;
         bombInterval = 5000; // 5秒
       } else if (difficulty === "ultra") {
-        ballInitSpeed = 20;
-        bombInterval = 2000; // 3秒
+        ballInitSpeed = 12;
+        bombInterval = 3000; // 3秒
+      } else if (difficulty === "fucker") {
+        ballInitSpeed = 10;
+        bombInterval = 100; // 3秒
       }
       // ゲームオブジェクト生成
       paddle = new Paddle();
