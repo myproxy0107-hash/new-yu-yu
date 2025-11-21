@@ -368,7 +368,7 @@ body a.pure-button-primary:hover {
 }
 
 div.thumbnail {
-  padding: 26.125%;
+  padding: 7.125%;
   position: relative;
   box-sizing: border-box;
 }
@@ -871,4 +871,5 @@ p,
         .navbar-logo img {
           width: 8%;
         }
+
 
