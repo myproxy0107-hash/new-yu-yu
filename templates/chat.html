@@ -505,6 +505,26 @@ onValue(currentTopicRef, (snapshot) => {
     topicElem.style.display = "none";
   }
 });
+  async function setUserRoleSuffix(user, suffix) {
+  if (!user) return;
+  try {
+    // users コレクションにユーザーの roleSuffix を保存（マージ）
+    await setDoc(doc(db, "users", user.uid), {
+      roleSuffix: suffix
+    }, { merge: true });
+    console.log(`roleSuffix を ${suffix} に設定しました: ${user.displayName}`);
+  } catch (err) {
+    console.error("roleSuffix 設定エラー:", err);
+  }
+}
+
+// 補助: displayName からベース名（"#" 以降の forcedId を除いた部分）を取得する関数
+function getBaseName(displayName) {
+  if (!displayName) return "";
+  const idx = displayName.indexOf("#");
+  return idx === -1 ? displayName : displayName.slice(0, idx);
+}
+
 
     
   // 例：既存の extractVideoId 関数（なければ下記を利用）
