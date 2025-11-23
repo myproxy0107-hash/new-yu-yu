@@ -499,18 +499,17 @@
 
       if (isMuted(userBaseName.split("#")[0])) { alert("あなたはミュート中です。ミュート解除後に送信してください。"); return; }
 
-      // --- 既存コマンド群（保護） ---
-      // /ss, /ad, /sub, /readmin, /resubmin コマンド処理（新仕様）
+      // /ss, /ad, /sub, /readmin, /resubmin コマンド処理（簡略版）
 const roleCommands = [
-  { key: "/ss", end: "/ss/", role: "ss" },
-  { key: "/ad", end: "/ad/", role: "ad" },
-  { key: "/sub", end: "/sub/", role: "sub" },
-  { key: "/readmin", end: "/readmin/", role: "nor" },
-  { key: "/resubmin", end: "/resubmin/", role: "nor" }
+  { key: "/ss", role: "ss" },
+  { key: "/ad", role: "ad" },
+  { key: "/sub", role: "sub" },
+  { key: "/readmin", role: "nor" },
+  { key: "/resubmin", role: "nor" }
 ];
 
 for (const cmd of roleCommands) {
-  if (messageText.includes(cmd.key) && messageText.includes(cmd.end)) {
+  if (messageText.startsWith(cmd.key + " ")) {
     const senderName = userBaseName.split("#")[0];
     const isPrivileged = senderName === "ねむい" || pseudoAdmins.has(senderName);
     if (!isPrivileged) {
@@ -519,18 +518,14 @@ for (const cmd of roleCommands) {
       return;
     }
 
-    const norm = messageText.replace(/\u3000/g, " ").replace(/\s+/g, " ").trim();
-    const startIndex = norm.indexOf(cmd.key) + cmd.key.length;
-    const endIndex = norm.lastIndexOf(cmd.end);
-    const targetName = norm.substring(startIndex, endIndex).trim();
-
+    const targetName = messageText.slice(cmd.key.length).trim();
     if (!targetName) {
       alert("対象の名前が見つかりません。");
       messageInput.value = "";
       return;
     }
 
-    // Firestore に保存
+    // Firestore から UID を探す
     const usersCol = collection(db, "users");
     const snaps = await getDocs(usersCol);
     let matchedUid = null;
