@@ -136,6 +136,126 @@
         font-size: 12px;
         color: var(--yt-spec-text-secondary);
       }
+		/* 関連動画（右カラム）の上書きスタイル */
+.video-right {
+  /* 右カラム内の既存余白を崩さない */
+}
+
+/* 各関連動画アイテム全体を横並びにする（サムネイル左・情報右） */
+.video-right .recomeention {
+  display: block;
+  margin-bottom: 12px;
+  padding: 6px 4px;
+  border-radius: 8px;
+}
+
+/* リンク部分をフレックスにして左にサムネ、小さく配置 */
+.video-right .recomeention > a {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  padding: 4px 2px;
+}
+
+/* 内包される .thumbnail（div） の余白やパディングを無効化して小さく調整 */
+.video-right .recomeention > a .thumbnail {
+  padding: 0 !important;
+  width: 120px;          /* サムネイル領域の幅（調整可） */
+  flex: 0 0 120px;
+  box-sizing: border-box;
+  position: relative;
+  height: 67.5px;        /* 16:9 比率（120 * 9 / 16 = 67.5） */
+  overflow: hidden;
+  border-radius: 6px;
+  background: #000;
+}
+
+/* 実際の img.thumbnail をサムネイル領域に馴染ませる */
+.video-right .recomeention > a .thumbnail img.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 6px;
+}
+
+/* サムネイル上の長さ表示（.length）がある場合の位置調整 */
+.video-right .recomeention > a .thumbnail .length {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+/* 右側メタ領域（タイトルとその下の情報） */
+.video-right .recomeention > a p,
+.video-right .recomeention > a .meta {
+  margin: 0;
+  padding: 0;
+}
+
+/* タイトル（a の直下の p 要素） */
+.video-right .recomeention > a p {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--yt-spec-text-primary, #0f0f0f);
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* 最大2行で省略 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  min-width: 0; /* テキスト省略を効かせるため */
+}
+
+/* タイトルの下にある視聴回数とチャンネルリンクは .recomeention 内の p, a 要素として存在するので微調整 */
+.video-right .recomeention > p,
+.video-right .recomeention > a + p,
+.video-right .recomeention > a + p + a {
+  font-size: 0.82rem;
+  color: var(--yt-spec-text-secondary, #606060);
+  margin: 6px 0 0 0;
+}
+
+/* チャンネルリンク（下段の a） */
+.video-right .recomeention > a + p + a {
+  color: var(--yt-spec-text-secondary, #606060);
+  text-decoration: none;
+}
+
+/* ホバー時の視覚効果（リンク全体に限定） */
+.video-right .recomeention > a:hover {
+  background: rgba(0,0,0,0.03);
+  border-radius: 8px;
+}
+
+/* モバイル調整：狭い領域ではサムネを少し小さくして行間を詰める */
+@media (max-width: 520px) {
+  .video-right .recomeention > a .thumbnail {
+    width: 96px;
+    flex: 0 0 96px;
+    height: 54px;
+  }
+  .video-right .recomeention > a p {
+    font-size: 0.92rem;
+    -webkit-line-clamp: 2;
+  }
+}
+
+/* 既存の .thumbnail 全体に影響する過剰指定をリセット（副作用を避けるため限定的に） */
+.video-right .recomeention > a .thumbnail,
+.video-right .recomeention > a .thumbnail * {
+  box-shadow: none;
+}
+
     
        /* トップバー */
       #top-bar {
