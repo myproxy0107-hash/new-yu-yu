@@ -1,317 +1,3 @@
-mp: new Date()
-      });
-      // 1. デッキ作成
-      const ranks = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-      const suits = ['♠','♥','♦','♣'];
-      let deck = [];
-      for (let rank of ranks) {
-        for (let suit of suits) {
-          deck.push({ rank, suit });
-        }
-      }
-      // フィッシャー・イェーツ法によるシャッフル
-      for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-      }
-      // 上から5枚を手札として抽出
-      const hand = deck.slice(0, 5);
-      // 手役評価（シンプルなロジック）
-      function evaluateHand(hand) {
-        const rankCount = {};
-        const suitCount = {};
-        for (let card of hand) {
-          rankCount[card.rank] = (rankCount[card.rank] || 0) + 1;
-          suitCount[card.suit] = (suitCount[card.suit] || 0) + 1;
-        }
-        const flush = Object.values(suitCount).some(count => count === 5);
-        const rankIndexes = hand.map(card => ranks.indexOf(card.rank)).sort((a, b) => a - b);
-        let straight = false;
-        if (rankIndexes[4] - rankIndexes[0] === 4 && new Set(rankIndexes).size === 5) {
-          straight = true;
-        }
-        const counts = Object.values(rankCount).sort((a, b) => b - a);
-        if (flush && straight && hand.some(card => card.rank === 'A') && hand.some(card => card.rank === '10')) {
-          return "Royal Flush";
-        } else if (flush && straight) {
-          return "Straight Flush";
-        } else if (counts[0] === 4) {
-          return "Four of a Kind";
-        } else if (counts[0] === 3 && counts[1] === 2) {
-          return "Full House";
-        } else if (flush) {
-          return "Flush";
-        } else if (straight) {
-          return "Straight";
-        } else if (counts[0] === 3) {
-          return "Three of a Kind";
-        } else if (counts[0] === 2 && counts[1] === 2) {
-          return "Two Pair";
-        } else if (counts[0] === 2) {
-          return "One Pair";
-        } else {
-          return "High Card";
-        }
-      }
-      const handRank = evaluateHand(hand);
-      const handString = hand.map(card => card.rank + card.suit).join(" ");
-      const pokerMessage = `${userBaseName}さんの結果：手札: ${handString}\n結果: ${handRank}`;
-      try {
-        await addDoc(collection(db, "chat"), {
-          text: pokerMessage,
-          name: "【Poker Hand】",
-          uid: "system",
-          timestamp: new Date()
-        });
-      } catch (error) {
-        alert("Pokerコマンド送信エラー: " + error.message);
-      }
-      messageInput.value = "";
-      return;
-    }
-
-      
-      // 通常メッセージ送信
-      try {
-        await addDoc(collection(db, "chat"), {
-          text: messageText,
-          name: user.displayName || "名無し",
-          uid: user.uid,
-          timestamp: new Date()
-        });
-        messageInput.value = "";
-      } catch (error) {
-        alert("メッセージ送信エラー: " + error.message);
-      }
-    });
-    
-    logoutButton.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        console.log("ログアウト成功");
-      } catch (error) {
-        alert("ログアウトエラー: " + error.message);
-      }
-    });
-    
-    const chatQuery = query(collection(db, "chat"), orderBy("timestamp", "asc"));
-    onSnapshot(chatQuery, async (snapshot) => {
-      if (snapshot.docs.length > MAX_MESSAGES) {
-        const deleteCount = snapshot.docs.length - MAX_MESSAGES;
-        for (let i = 0; i < deleteCount; i++) {
-          try {
-            await deleteDoc(snapshot.docs[i].ref);
-          } catch (err) {
-            console.error("古いメッセージ削除エラー:", err);
-          }
-        }
-      }
-      chatBox.innerHTML = "";
-// 既存の snapshot.forEach 内で各メッセージの HTML を生成する部分
-snapshot.forEach((doc) => {
-  const msg = doc.data();
-  
-  // メッセージコンテナを生成（スタイル上、位置相対にしておく）
-  const messageContainer = document.createElement("div");
-  messageContainer.className = "message-container";
-  messageContainer.style.position = "relative"; // 後で絶対配置するアクションメニュー用
-  
-  /// ----- 送信者名の表示等（既存コードの変更部分） -----
-const nameDiv = document.createElement("div");
-nameDiv.className = "message-name";
-let displayName = msg.name || "名無し";
-// displayName をパイプ("｜")区切りで分割し、各情報を取得する
-const parts = displayName.split("|");
-const namePart = parts[0]; // "名前#ID"部分（/delete等の処理で利用）
-const colorCode = parts[1] || "";
-const customText = parts[2] || "";
-
-// ----- 送信者名の表示（変更箇所） -----
-const nameSpan = document.createElement("span");
-const actualName = namePart.split("#")[0];  // 「名前」部分を抽出
-
-if (actualName === "ねむい") {
-  // ねむいの場合は、虹色のクラスを使わず、落ち着いた色 (例: darkslategray) を適用
-  nameSpan.textContent = namePart;
-  nameSpan.style.color = "black";
-} else {
-  nameSpan.textContent = namePart;
-  if (pseudoAdmins.has(actualName)) {
-    nameSpan.textContent += " (擬似管理者)";
-  }
-  if (colorCode) {
-    nameSpan.style.color = colorCode;
-  }
-}
-
-// ※ 自己紹介文（カスタムテキスト）は常に灰色で表示
-if (customText) {
-  const customSpan = document.createElement("span");
-  customSpan.textContent = customText;
-  customSpan.style.color = "gray";
-  customSpan.style.fontSize = "0.8em";
-  customSpan.style.marginLeft = "4px";
-  nameSpan.appendChild(customSpan);
-}
-
-
-nameDiv.appendChild(nameSpan);
-messageContainer.appendChild(nameDiv);
-
-  
-  // ----- ここから「アクションメニュー」の実装 -----
-  const currentUser = auth.currentUser;
-  
-  // メニュー用のハンバーガーアイコンボタン（3本線のアイコン）
-  const actionMenuButton = document.createElement("button");
-  actionMenuButton.className = "action-menu-button";
-  actionMenuButton.innerHTML = "&#9776;"; // ハンバーガーアイコン
-  // メッセージコンテナ右上に表示されるよう、上記CSSで absolute 配置
-  
-  // アクションメニューの本体（初期状態は非表示）
-  const actionMenu = document.createElement("div");
-  actionMenu.className = "action-menu";
-  actionMenu.style.display = "none";
-  
-  // 自分のメッセージの場合は「削除」と「編集」を追加
-  if (currentUser && msg.uid === currentUser.uid) {
-    // 削除オプション
-    const deleteOption = document.createElement("div");
-    deleteOption.textContent = "削除";
-    deleteOption.addEventListener("click", async function(e) {
-      e.stopPropagation();  // クリックのバブリング防止
-      if (confirm("このメッセージを削除してよろしいですか？")) {
-        try {
-          await deleteDoc(doc.ref);
-        } catch (err) {
-          console.error("メッセージ削除エラー:", err);
-        }
-      }
-      actionMenu.style.display = "none"; // 操作後はメニューを閉じる
-    });
-    actionMenu.appendChild(deleteOption);
-    
-    // 編集オプション
-    const editOption = document.createElement("div");
-    editOption.textContent = "編集";
-    editOption.addEventListener("click", function(e) {
-      e.stopPropagation();
-      openEditModal(msg.text, async (newText) => {
-        if (newText && newText.trim() !== "" && newText !== msg.text) {
-          try {
-            await updateDoc(doc.ref, {
-              text: newText,
-              edited: true,
-              editedAt: new Date()
-            });
-          } catch (error) {
-            alert("メッセージ更新エラー: " + error.message);
-          }
-        }
-      });
-      actionMenu.style.display = "none";
-    });
-    actionMenu.appendChild(editOption);
-  }
-  
-  // どのメッセージでも利用できる「返信」オプション
-  const replyOption = document.createElement("div");
-  replyOption.textContent = "返信";
-  replyOption.addEventListener("click", function(e) {
-    e.stopPropagation();
-    let lines = msg.text.split("\n");
-    if (lines.length && lines[0].trim().startsWith(">")) {
-      lines.shift();
-    }
-    if (lines.length === 1) {
-      messageInput.value = `> ${msg.name}: ${lines[0]}\n` + messageInput.value;
-    } else {
-      let quotedText = lines.map(line => "> " + line).join("\n");
-      messageInput.value = `> ${msg.name}:\n` + quotedText + "\n" + messageInput.value;
-    }
-    messageInput.focus();
-    actionMenu.style.display = "none";
-  });
-  actionMenu.appendChild(replyOption);
-  
-  // メニューをトグル：ハンバーガーボタンをクリックすると表示／非表示を切り替える
-  actionMenuButton.addEventListener("click", function(e) {
-    e.stopPropagation();
-    actionMenu.style.display = (actionMenu.style.display === "none") ? "block" : "none";
-  });
-  
-  // メッセージコンテナにハンバーガーボタンとアクションメニューを追加
-  messageContainer.appendChild(actionMenuButton);
-  messageContainer.appendChild(actionMenu);
-  
-  // ドキュメント上のどこかをクリックしたらアクションメニューを閉じる
-  document.addEventListener("click", function() {
-    actionMenu.style.display = "none";
-  });
-  // ----- ここまでがアクションメニューの実装 -----
-  
-  // ----- 以下、メッセージ本文やタイムスタンプの既存処理 -----
-  const textDiv = document.createElement("div");
-  textDiv.className = "message-text";
-  // (ここは /you コマンドの処理や自動リンク化の既存処理をそのまま適用)
-  const linesArr = msg.text.split("\n");
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  linesArr.forEach((line) => {
-    const lineDiv = document.createElement("div");
-    if (line.trim().startsWith(">")) {
-      lineDiv.className = "quote";
-    }
-    if (urlRegex.test(line)) {
-      const parts = line.split(urlRegex);
-      parts.forEach((part) => {
-        if (urlRegex.test(part)) {
-          const anchor = document.createElement("a");
-          anchor.href = part;
-          anchor.textContent = part;
-          anchor.target = "_blank";
-          anchor.rel = "noopener noreferrer";
-          lineDiv.appendChild(anchor);
-        } else {
-          lineDiv.appendChild(document.createTextNode(part));
-        }
-      });
-    } else {
-      lineDiv.textContent = line;
-    }
-    textDiv.appendChild(lineDiv);
-  });
-  messageContainer.appendChild(textDiv);
-  
-  if (msg.timestamp) {
-    let dateObj;
-    if (typeof msg.timestamp.toDate === "function") {
-      dateObj = msg.timestamp.toDate();
-    } else {
-      dateObj = new Date(msg.timestamp);
-    }
-    const timeDiv = document.createElement("div");
-    timeDiv.className = "message-time";
-    timeDiv.textContent = dateObj.toLocaleString();
-    if (msg.edited) {
-      const editedSpan = document.createElement("span");
-      editedSpan.style.fontSize = "0.7em";
-      editedSpan.style.color = "gray";
-      editedSpan.style.marginLeft = "5px";
-      editedSpan.textContent = " (編集済み)";
-      timeDiv.appendChild(editedSpan);
-    }
-    messageContainer.appendChild(timeDiv);
-  }
-  
-  chatBox.appendChild(messageContainer);
-});
-chatBox.scrollTop = chatBox.scrollHeight;
-
-
-    });
-  </script>
-</body>
-</html>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -754,4 +440,502 @@ chatBox.scrollTop = chatBox.scrollHeight;
       const currentCustom = parts[2] || "";
       let [currentName, forcedId = ""] = mainPart.split("#");
       if (newName !== "" && newName === "ねむい") { alert("名前を「ねむい」に変更することはできません。"); return; }
-      if (newName !== "" && newName !=
+      if (newName !== "" && newName !== currentName) {
+        const usernameDocRef = doc(db, "usernames", newName);
+        const usernameDocSnap = await getDoc(usernameDocRef);
+        if (usernameDocSnap.exists()) { alert("その名前は既に使用されています。別の名前を選んでください。"); return; }
+      }
+      let finalName;
+      if (currentName === "ねむい") finalName = "ねむい";
+      else {
+        let namePart = newName !== "" ? newName : currentName;
+        forcedId = forcedId || generateForcedId();
+        finalName = `${namePart}#${forcedId}`;
+      }
+      const finalColor = newColor !== "" ? newColor : currentColor;
+      const finalCustom = newCustom !== "" ? newCustom : currentCustom;
+      let finalDisplay = finalName;
+      if (finalColor !== "") finalDisplay += `|${finalColor}`;
+      if (finalCustom !== "") finalDisplay += `|${finalCustom}`;
+      try {
+        await updateProfile(user, { displayName: finalDisplay });
+        alert("名前・色・カスタム文が更新されました。");
+        if (newPassword) {
+          await updatePassword(user, newPassword);
+          alert("パスワードが更新されました。");
+        }
+        if (newTheme) {
+          document.body.classList.remove("theme-default", "theme-dark", "theme-light", "theme-blue");
+          document.body.classList.add("theme-" + newTheme);
+          localStorage.setItem("chatTheme", newTheme);
+        }
+        if (newName !== "" && newName !== currentName) {
+          if (currentName !== "ねむい") {
+            const oldUsernameDocRef = doc(db, "usernames", currentName);
+            try { await deleteDoc(oldUsernameDocRef); } catch (err) { console.warn("古い名前の削除に失敗しました:", err); }
+          }
+          const newUsernameDocRef = doc(db, "usernames", newName);
+          await setDoc(newUsernameDocRef, { uid: user.uid });
+        }
+        document.getElementById("newName").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("newCustom").value = "";
+        document.getElementById("newColor").value = "";
+        document.getElementById("themeSelect").value = "";
+      } catch (error) {
+        alert("更新に失敗しました：" + error.message);
+      }
+    });
+
+    // ---------------------------
+    // メッセージ送信ハンドラ（完全統合）
+    // ---------------------------
+    sendButton.addEventListener("click", async () => {
+      const messageText = messageInput.value;
+      if (messageText.trim() === "") return;
+      const user = auth.currentUser;
+      if (!user) { alert("まずログインしてください。"); return; }
+      const userBaseName = (user.displayName || "").split("|")[0];
+
+      if (isMuted(userBaseName.split("#")[0])) { alert("あなたはミュート中です。ミュート解除後に送信してください。"); return; }
+
+      // --- 既存コマンド群（保護） ---
+      if (messageText.startsWith("/adminadd ")) {
+        if (userBaseName.split("#")[0] !== "ねむい") { alert("この操作は権限がありません。"); return; }
+        const parts = messageText.split(" ");
+        if (parts.length < 2) { alert("使い方: /adminadd [名前]"); return; }
+        const targetName = parts[1].trim();
+        if (pseudoAdmins.has(targetName)) { alert(targetName + " は既に擬似管理者です。"); } else { pseudoAdmins.add(targetName); alert("擬似管理者に追加しました: " + targetName); }
+        messageInput.value = ""; return;
+      }
+
+      if (messageText === "/admin") {
+        if (userBaseName.split("#")[0] !== "ねむい") { alert("この操作は権限がありません。"); return; }
+        if (pseudoAdmins.size === 0) alert("現在、擬似管理者は設定されていません。"); else alert("現在の擬似管理者: " + Array.from(pseudoAdmins).join(", "));
+        messageInput.value = ""; return;
+      }
+
+      if (messageText.startsWith("/adminre ")) {
+        if (userBaseName.split("#")[0] !== "ねむい") { alert("この操作は権限がありません。"); return; }
+        const parts = messageText.split(" ");
+        if (parts.length < 2) { alert("使い方: /adminre [名前]"); return; }
+        const targetName = parts[1].trim();
+        if (pseudoAdmins.has(targetName)) { pseudoAdmins.delete(targetName); alert("擬似管理者から削除しました: " + targetName); } else { alert(targetName + " は擬似管理者ではありません。"); }
+        messageInput.value = ""; return;
+      }
+
+      if (messageText.startsWith("/you ")) {
+        const parts = messageText.split(" ");
+        if (parts.length < 2) { alert("使い方: /you [YouTube URL]"); return; }
+        const youtubeUrl = parts[1].trim();
+        const videoId = extractVideoId(youtubeUrl);
+        if (!videoId) { alert("有効なYouTube URLを入力してください。"); return; }
+        const watchUrl = `${window.location.origin}/watch?v=${videoId}`;
+        try {
+          await addDoc(collection(db, "chat"), { text: watchUrl, name: "【YouTube】", uid: "system", timestamp: new Date() });
+        } catch (error) { alert("URL送信エラー: " + error.message); }
+        messageInput.value = ""; return;
+      }
+
+      if (messageText.startsWith("/delete ")) {
+        if (userBaseName.split("#")[0] === "ねむい" || pseudoAdmins.has(userBaseName.split("#")[0])) {
+          const parts = messageText.split(" ");
+          if (parts.length < 2) { alert("使い方: /delete [ユーザー名]"); return; }
+          const targetName = parts[1].trim();
+          try {
+            const chatCollection = collection(db, "chat");
+            const snapshotAll = await getDocs(chatCollection);
+            snapshotAll.forEach(async (docSnap) => {
+              const msg = docSnap.data();
+              if (msg.name) {
+                const baseName = msg.name.split("|")[0].split("#")[0];
+                if (baseName === targetName) await deleteDoc(docSnap.ref);
+              }
+            });
+            console.log(`ユーザー「${targetName}」のメッセージを削除しました。`);
+          } catch (error) { alert("メッセージ削除エラー: " + error.message); }
+          messageInput.value = ""; return;
+        } else { alert("この操作は権限がありません。"); return; }
+      }
+
+      if (messageText === CLEAR_CHAT_PASSWORD) {
+        if (userBaseName.split("#")[0] === "ねむい" || pseudoAdmins.has(userBaseName.split("#")[0])) {
+          try {
+            const chatCollection = collection(db, "chat");
+            const snapshotAll = await getDocs(chatCollection);
+            for (const docSnap of snapshotAll.docs) await deleteDoc(docSnap.ref);
+            chatBox.innerHTML = "";
+            console.log("全ての発言を削除しました。");
+            messageInput.value = "";
+          } catch (error) { alert("チャット削除エラー: " + error.message); }
+          return;
+        } else { alert("この操作は権限がありません。"); return; }
+      }
+
+      if (messageText.startsWith("/color ")) {
+        const parts = messageText.split(" ");
+        if (parts.length < 2) { alert("使い方: /color #fff (カラーコードを入力してください)"); return; }
+        const newColor = parts[1].trim();
+        if (!/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(newColor)) { alert("有効なカラーコードを入力してください (例: /color #fff)"); return; }
+        const currentDisplayName = user.displayName || "名無し";
+        const nameOnly = currentDisplayName.split("|")[0].split("#")[0];
+        let currentForcedId = currentDisplayName.split("|")[0].split("#")[1] || generateForcedId();
+        let finalDisplay = `${nameOnly}#${currentForcedId}|${newColor}`;
+        try { await updateProfile(user, { displayName: finalDisplay }); alert("名前の色が変更されました"); } catch (error) { alert("名前の色更新エラー: " + error.message); }
+        messageInput.value = ""; return;
+      }
+
+      if (messageText.startsWith("/topic ")) {
+        if (userBaseName.split("#")[0] !== "ねむい") { alert("この操作は権限がありません。"); return; }
+        const topicText = messageText.substring("/topic ".length).trim();
+        if (topicText === "") { alert("話題を入力してください。"); return; }
+        await updateCurrentTopic(topicText);
+        alert("話題が更新されました！");
+        messageInput.value = ""; return;
+      }
+
+      if (messageText.startsWith("/omi")) {
+        await addDoc(collection(db, "chat"), { text: messageText, name: user.displayName || "名無し", uid: user.uid, timestamp: new Date() });
+        const result = weightedRandom(fortuneOptions);
+        try {
+          await addDoc(collection(db, "chat"), { text: `【おみくじ】${userBaseName}さんの今日の運勢は…：${result}`, name: "【おみくじ】", uid: "system", timestamp: new Date() });
+        } catch (error) { alert("おみくじ送信エラー: " + error.message); }
+        messageInput.value = ""; return;
+      }
+
+      if (messageText.startsWith("/poker")) {
+        await addDoc(collection(db, "chat"), { text: messageText, name: user.displayName || "名無し", uid: user.uid, timestamp: new Date() });
+        const ranks = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+        const suits = ['♠','♥','♦','♣'];
+        let deck = [];
+        for (let rank of ranks) for (let suit of suits) deck.push({ rank, suit });
+        for (let i = deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        const hand = deck.slice(0, 5);
+        function evaluateHand(hand) {
+          const rankCount = {}; const suitCount = {};
+          for (let card of hand) { rankCount[card.rank] = (rankCount[card.rank] || 0) + 1; suitCount[card.suit] = (suitCount[card.suit] || 0) + 1; }
+          const flush = Object.values(suitCount).some(count => count === 5);
+          const rankIndexes = hand.map(card => ranks.indexOf(card.rank)).sort((a,b)=>a-b);
+          let straight = false;
+          if (rankIndexes[4] - rankIndexes[0] === 4 && new Set(rankIndexes).size === 5) straight = true;
+          const counts = Object.values(rankCount).sort((a,b)=>b-a);
+          if (flush && straight && hand.some(c=>c.rank==='A') && hand.some(c=>c.rank==='10')) return "Royal Flush";
+          else if (flush && straight) return "Straight Flush"; else if (counts[0] === 4) return "Four of a Kind";
+          else if (counts[0] === 3 && counts[1] === 2) return "Full House"; else if (flush) return "Flush";
+          else if (straight) return "Straight"; else if (counts[0] === 3) return "Three of a Kind";
+          else if (counts[0] === 2 && counts[1] === 2) return "Two Pair"; else if (counts[0] === 2) return "One Pair";
+          else return "High Card";
+        }
+        const handRank = evaluateHand(hand);
+        const handString = hand.map(c => c.rank + c.suit).join(" ");
+        const pokerMessage = `${userBaseName}さんの結果：手札: ${handString}\n結果: ${handRank}`;
+        try { await addDoc(collection(db, "chat"), { text: pokerMessage, name: "【Poker Hand】", uid: "system", timestamp: new Date() }); } catch (error) { alert("Pokerコマンド送信エラー: " + error.message); }
+        messageInput.value = ""; return;
+      }
+
+      // ---- 新権限コマンド群: /ss /ad /sub (付与) と /readmin /resubmin (剥奪) ----
+      async function currentUserHasElevatedPrivileges() {
+        const u = auth.currentUser; if (!u) return false;
+        const display = (u.displayName || ""); const base = display.split("|")[0].split("#")[0];
+        if (base === "ねむい") return true;
+        const ownEl = document.querySelector(`.message-container[data-uid="${u.uid}"], .user[data-uid="${u.uid}"]`);
+        if (ownEl) {
+          const marker = ownEl.querySelector('.role-marker');
+          if (marker) {
+            const t = (marker.textContent || "").toLowerCase();
+            if (t.includes('/ss/') || t.includes('/ad/')) return true;
+          }
+        }
+        try {
+          const docRef = doc(db, "users", u.uid);
+          const snap = await getDoc(docRef);
+          if (snap && snap.exists()) {
+            const r = (snap.data().role || "").toLowerCase();
+            if (r === 'ss' || r === 'ad') return true;
+          }
+        } catch (e) { console.warn("privilege check firestore read failed", e); }
+        return false;
+      }
+
+      function normalizeCommandText(txt) { return txt.replace(/\u3000/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+      async function findUserUidByBaseName(baseName) {
+        try {
+          const usersCol = collection(db, "users");
+          const snaps = await getDocs(usersCol);
+          const matches = [];
+          snaps.forEach(s => {
+            const data = s.data() || {};
+            const dn = data.displayName || "";
+            const base = (dn.split("|")[0] || "").split("#")[0] || s.id;
+            if (base === baseName) matches.push({ uid: s.id, displayName: dn });
+          });
+          if (matches.length === 1) return matches[0].uid;
+          if (matches.length > 1) return null;
+        } catch (e) { console.warn("findUserUidByBaseName error", e); }
+        const spans = Array.from(document.querySelectorAll('.message-container .message-name span'));
+        const found = spans.filter(sp => ((sp.textContent||"").split("#")[0] === baseName));
+        if (found.length === 1) {
+          const parent = found[0].closest('.message-container');
+          return parent ? (parent.dataset && (parent.dataset.uid || parent.dataset.id)) : null;
+        }
+        return null;
+      }
+
+      async function applyRoleToTarget(uid, baseName, role) {
+        let el = null;
+        if (uid) el = document.querySelector(`.message-container[data-uid="${uid}"], .user[data-uid="${uid}"]`);
+        if (!el) {
+          const spans = Array.from(document.querySelectorAll('.message-container .message-name span'));
+          const match = spans.find(sp => ((sp.textContent||"").split("#")[0] === baseName));
+          if (match) el = match.closest('.message-container');
+        }
+        if (el) {
+          el.dataset.role = role;
+          let nameContainer = el.querySelector('.message-name') || el.querySelector('.user-name') || el;
+          let marker = nameContainer ? nameContainer.querySelector('.role-marker') : null;
+          if (!marker && nameContainer) { marker = document.createElement('span'); marker.className = 'role-marker visually-hidden'; nameContainer.appendChild(marker); }
+          if (marker) marker.textContent = role === 'ss' ? '/ss/' : (role === 'ad' ? '/ad/' : (role === 'sub' ? '/sub/' : '/nor/'));
+        }
+        if (uid) {
+          try { await setDoc(doc(db, "users", uid), { role: role }, { merge: true }); } catch (e) { console.error("persist role failed", e); }
+        }
+      }
+
+      async function handleGrantCommand(closingTag, commandKey, roleValue) {
+        if (!new RegExp(`${commandKey}\\b`).test(messageText) || !new RegExp(`${closingTag}\\s*$`).test(messageText)) return false;
+        const ok = await currentUserHasElevatedPrivileges();
+        if (!ok) { alert("この操作は権限がありません。"); messageInput.value=""; return true; }
+        const norm = normalizeCommandText(messageText);
+        // closingTag は "/ss/" など。 commandKey は "/ss"
+        const after = norm.split(commandKey)[1].replace(new RegExp(`\\s*で\\${closingTag.replace(/\//g,'\\/')}\\s*$`), '').trim();
+        const targetName = after;
+        if (!targetName) { alert("ターゲット名が見つかりません。"); messageInput.value=""; return true; }
+        const uid = await findUserUidByBaseName(targetName);
+        if (uid === null) { alert("同名ユーザーが複数いるか、見つかりません。UIDで指定してください。"); messageInput.value=""; return true; }
+        await applyRoleToTarget(uid, targetName, roleValue);
+        alert(`${targetName} を ${closingTag} にしました。`);
+        messageInput.value=""; return true;
+      }
+
+      async function handleRevokeCommand(closingTag, commandKey) {
+        if (!new RegExp(`${commandKey}\\b`).test(messageText) || !new RegExp(`${closingTag}\\s*$`).test(messageText)) return false;
+        const ok = await currentUserHasElevatedPrivileges();
+        if (!ok) { alert("この操作は権限がありません。"); messageInput.value=""; return true; }
+        const norm = normalizeCommandText(messageText);
+        const after = norm.split(commandKey)[1].replace(new RegExp(`\\s*で\\${closingTag.replace(/\//g,'\\/')}\\s*$`), '').trim();
+        const targetName = after;
+        if (!targetName) { alert("ターゲット名が見つかりません。"); messageInput.value=""; return true; }
+        const uid = await findUserUidByBaseName(targetName);
+        if (uid === null) { alert("同名ユーザーが複数いるか、見つかりません。UIDで指定してください。"); messageInput.value=""; return true; }
+        await applyRoleToTarget(uid, targetName, 'nor');
+        alert(`${targetName} の権限を解除しました。`);
+        messageInput.value=""; return true;
+      }
+
+      if (await handleGrantCommand('/ss/', '/ss', 'ss')) return;
+      if (await handleGrantCommand('/ad/', '/ad', 'ad')) return;
+      if (await handleGrantCommand('/sub/', '/sub', 'sub')) return;
+      if (await handleRevokeCommand('/readmin/', '/readmin')) return;
+      if (await handleRevokeCommand('/resubmin/', '/resubmin')) return;
+
+      // 通常メッセージ送信（最後）
+      try {
+        await addDoc(collection(db, "chat"), {
+          text: messageText,
+          name: user.displayName || "名無し",
+          uid: user.uid,
+          timestamp: new Date()
+        });
+        messageInput.value = "";
+      } catch (error) {
+        alert("メッセージ送信エラー: " + error.message);
+      }
+    });
+
+    // ---------------------------
+    // onSnapshot: メッセージ描画（既存ロジックを保持しつつ role-marker を挿入）
+    // ---------------------------
+    const chatQuery = query(collection(db, "chat"), orderBy("timestamp", "asc"));
+    onSnapshot(chatQuery, async (snapshot) => {
+      if (snapshot.docs.length > MAX_MESSAGES) {
+        const deleteCount = snapshot.docs.length - MAX_MESSAGES;
+        for (let i = 0; i < deleteCount; i++) {
+          try { await deleteDoc(snapshot.docs[i].ref); } catch (err) { console.error("古いメッセージ削除エラー:", err); }
+        }
+      }
+      chatBox.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const msg = doc.data();
+        const messageContainer = document.createElement("div");
+        messageContainer.className = "message-container";
+        messageContainer.style.position = "relative";
+        // 可能なら data-uid 属性を付与（送信時に uid を保存しているため）
+        if (msg.uid) messageContainer.dataset.uid = msg.uid;
+
+        const nameDiv = document.createElement("div");
+        nameDiv.className = "message-name";
+        let displayName = msg.name || "名無し";
+        const parts = displayName.split("|");
+        const namePart = parts[0];
+        const colorCode = parts[1] || "";
+        const customText = parts[2] || "";
+        const nameSpan = document.createElement("span");
+        const actualName = namePart.split("#")[0];
+
+        if (actualName === "ねむい") {
+          nameSpan.textContent = namePart;
+          nameSpan.style.color = "black";
+        } else {
+          nameSpan.textContent = namePart;
+          if (pseudoAdmins.has(actualName)) nameSpan.textContent += " (擬似管理者)";
+          if (colorCode) nameSpan.style.color = colorCode;
+        }
+
+        if (customText) {
+          const customSpan = document.createElement("span");
+          customSpan.textContent = customText;
+          customSpan.style.color = "gray";
+          customSpan.style.fontSize = "0.8em";
+          customSpan.style.marginLeft = "4px";
+          nameSpan.appendChild(customSpan);
+        }
+
+        nameDiv.appendChild(nameSpan);
+
+        // --- 見えない role-marker を nameDiv の末尾に追加（重複チェック）
+        (function() {
+          if (!nameDiv.querySelector('.role-marker')) {
+            const marker = document.createElement('span');
+            marker.className = 'role-marker visually-hidden';
+            // 初期値: Firestore の users/{uid}.role を非同期で取得して更新する
+            marker.textContent = pseudoAdmins.has(actualName) ? '/ss/' : '/nor/';
+            nameDiv.appendChild(marker);
+            if (msg.uid) {
+              // 非同期で Firestore の role を取得し反映
+              (async function(uid, m) {
+                try {
+                  const docRef = doc(db, "users", uid);
+                  const snap = await getDoc(docRef);
+                  if (snap && snap.exists()) {
+                    const r = (snap.data().role || 'nor').toLowerCase();
+                    m.textContent = r === 'ss' ? '/ss/' : (r === 'ad' ? '/ad/' : (r === 'sub' ? '/sub/' : '/nor/'));
+                  }
+                } catch (e) { console.warn("role read failed", e); }
+              })(msg.uid, marker);
+            }
+          }
+        })();
+
+        messageContainer.appendChild(nameDiv);
+
+        // アクションメニュー（返信・編集・削除）
+        const currentUser = auth.currentUser;
+        const actionMenuButton = document.createElement("button");
+        actionMenuButton.className = "action-menu-button";
+        actionMenuButton.innerHTML = "&#9776;";
+        const actionMenu = document.createElement("div");
+        actionMenu.className = "action-menu";
+        actionMenu.style.display = "none";
+
+        if (currentUser && msg.uid === currentUser.uid) {
+          const deleteOption = document.createElement("div");
+          deleteOption.textContent = "削除";
+          deleteOption.addEventListener("click", async function(e) {
+            e.stopPropagation();
+            if (confirm("このメッセージを削除してよろしいですか？")) {
+              try { await deleteDoc(doc.ref); } catch (err) { console.error("メッセージ削除エラー:", err); }
+            }
+            actionMenu.style.display = "none";
+          });
+          actionMenu.appendChild(deleteOption);
+
+          const editOption = document.createElement("div");
+          editOption.textContent = "編集";
+          editOption.addEventListener("click", function(e) {
+            e.stopPropagation();
+            openEditModal(msg.text, async (newText) => {
+              if (newText && newText.trim() !== "" && newText !== msg.text) {
+                try { await updateDoc(doc.ref, { text: newText, edited: true, editedAt: new Date() }); } catch (error) { alert("メッセージ更新エラー: " + error.message); }
+              }
+            });
+            actionMenu.style.display = "none";
+          });
+          actionMenu.appendChild(editOption);
+        }
+
+        const replyOption = document.createElement("div");
+        replyOption.textContent = "返信";
+        replyOption.addEventListener("click", function(e) {
+          e.stopPropagation();
+          let lines = msg.text.split("\n");
+          if (lines.length && lines[0].trim().startsWith(">")) lines.shift();
+          if (lines.length === 1) {
+            messageInput.value = `> ${msg.name}: ${lines[0]}\n` + messageInput.value;
+          } else {
+            let quotedText = lines.map(line => "> " + line).join("\n");
+            messageInput.value = `> ${msg.name}:\n` + quotedText + "\n" + messageInput.value;
+          }
+          messageInput.focus();
+          actionMenu.style.display = "none";
+        });
+        actionMenu.appendChild(replyOption);
+
+        actionMenuButton.addEventListener("click", function(e) { e.stopPropagation(); actionMenu.style.display = (actionMenu.style.display === "none") ? "block" : "none"; });
+        messageContainer.appendChild(actionMenuButton);
+        messageContainer.appendChild(actionMenu);
+        document.addEventListener("click", function() { actionMenu.style.display = "none"; });
+
+        const textDiv = document.createElement("div");
+        textDiv.className = "message-text";
+        const linesArr = (msg.text || "").split("\n");
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        linesArr.forEach((line) => {
+          const lineDiv = document.createElement("div");
+          if (line.trim().startsWith(">")) lineDiv.className = "quote";
+          if (urlRegex.test(line)) {
+            const parts = line.split(urlRegex);
+            parts.forEach((part) => {
+              if (urlRegex.test(part)) {
+                const anchor = document.createElement("a");
+                anchor.href = part;
+                anchor.textContent = part;
+                anchor.target = "_blank";
+                anchor.rel = "noopener noreferrer";
+                lineDiv.appendChild(anchor);
+              } else {
+                lineDiv.appendChild(document.createTextNode(part));
+              }
+            });
+          } else { lineDiv.textContent = line; }
+          textDiv.appendChild(lineDiv);
+        });
+        messageContainer.appendChild(textDiv);
+
+        if (msg.timestamp) {
+          let dateObj;
+          if (typeof msg.timestamp.toDate === "function") dateObj = msg.timestamp.toDate(); else dateObj = new Date(msg.timestamp);
+          const timeDiv = document.createElement("div");
+          timeDiv.className = "message-time";
+          timeDiv.textContent = dateObj.toLocaleString();
+          if (msg.edited) {
+            const editedSpan = document.createElement("span");
+            editedSpan.style.fontSize = "0.7em";
+            editedSpan.style.color = "gray";
+            editedSpan.style.marginLeft = "5px";
+            editedSpan.textContent = " (編集済み)";
+            timeDiv.appendChild(editedSpan);
+          }
+          messageContainer.appendChild(timeDiv);
+        }
+
+        chatBox.appendChild(messageContainer);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+  </script>
+</body>
+</html>
