@@ -500,29 +500,59 @@
       if (isMuted(userBaseName.split("#")[0])) { alert("あなたはミュート中です。ミュート解除後に送信してください。"); return; }
 
       // --- 既存コマンド群（保護） ---
-      if (messageText.startsWith("/adminadd ")) {
-        if (userBaseName.split("#")[0] !== "ねむい") { alert("この操作は権限がありません。"); return; }
-        const parts = messageText.split(" ");
-        if (parts.length < 2) { alert("使い方: /adminadd [名前]"); return; }
-        const targetName = parts[1].trim();
-        if (pseudoAdmins.has(targetName)) { alert(targetName + " は既に擬似管理者です。"); } else { pseudoAdmins.add(targetName); alert("擬似管理者に追加しました: " + targetName); }
-        messageInput.value = ""; return;
-      }
+      // /ss, /ad, /sub, /readmin, /resubmin コマンド処理（新仕様）
+const roleCommands = [
+  { key: "/ss", end: "/ss/", role: "ss" },
+  { key: "/ad", end: "/ad/", role: "ad" },
+  { key: "/sub", end: "/sub/", role: "sub" },
+  { key: "/readmin", end: "/readmin/", role: "nor" },
+  { key: "/resubmin", end: "/resubmin/", role: "nor" }
+];
 
-      if (messageText === "/admin") {
-        if (userBaseName.split("#")[0] !== "ねむい") { alert("この操作は権限がありません。"); return; }
-        if (pseudoAdmins.size === 0) alert("現在、擬似管理者は設定されていません。"); else alert("現在の擬似管理者: " + Array.from(pseudoAdmins).join(", "));
-        messageInput.value = ""; return;
-      }
+for (const cmd of roleCommands) {
+  if (messageText.includes(cmd.key) && messageText.includes(cmd.end)) {
+    const senderName = userBaseName.split("#")[0];
+    const isPrivileged = senderName === "ねむい" || pseudoAdmins.has(senderName);
+    if (!isPrivileged) {
+      alert("この操作は権限がありません。");
+      messageInput.value = "";
+      return;
+    }
 
-      if (messageText.startsWith("/adminre ")) {
-        if (userBaseName.split("#")[0] !== "ねむい") { alert("この操作は権限がありません。"); return; }
-        const parts = messageText.split(" ");
-        if (parts.length < 2) { alert("使い方: /adminre [名前]"); return; }
-        const targetName = parts[1].trim();
-        if (pseudoAdmins.has(targetName)) { pseudoAdmins.delete(targetName); alert("擬似管理者から削除しました: " + targetName); } else { alert(targetName + " は擬似管理者ではありません。"); }
-        messageInput.value = ""; return;
-      }
+    const norm = messageText.replace(/\u3000/g, " ").replace(/\s+/g, " ").trim();
+    const startIndex = norm.indexOf(cmd.key) + cmd.key.length;
+    const endIndex = norm.lastIndexOf(cmd.end);
+    const targetName = norm.substring(startIndex, endIndex).trim();
+
+    if (!targetName) {
+      alert("対象の名前が見つかりません。");
+      messageInput.value = "";
+      return;
+    }
+
+    // Firestore に保存
+    const usersCol = collection(db, "users");
+    const snaps = await getDocs(usersCol);
+    let matchedUid = null;
+    snaps.forEach((s) => {
+      const data = s.data();
+      const dn = data.displayName || "";
+      const base = dn.split("|")[0].split("#")[0];
+      if (base === targetName) matchedUid = s.id;
+    });
+
+    if (!matchedUid) {
+      alert("対象ユーザーが見つかりません。");
+      messageInput.value = "";
+      return;
+    }
+
+    await setDoc(doc(db, "users", matchedUid), { role: cmd.role }, { merge: true });
+    alert(`${targetName} を ${cmd.role === "nor" ? "通常ユーザー" : "/" + cmd.role + "/"} に設定しました。`);
+    messageInput.value = "";
+    return;
+  }
+}
 
       if (messageText.startsWith("/you ")) {
         const parts = messageText.split(" ");
