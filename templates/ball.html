@@ -282,7 +282,7 @@
     function startGame(difficulty) {
       // パラメータ設定（難易度による調整）
       if (difficulty === "easy") {
-        ballInitSpeed = 5;
+        ballInitSpeed = 2;
         bombInterval = null;
       } else if (difficulty === "normal") {
         ballInitSpeed = 7;
@@ -297,8 +297,8 @@
         ballInitSpeed = 9;
         bombInterval = 400; // 0.8秒
       } else if (difficulty === "fuck") {
-        ballInitSpeed = 9;
-        bombInterval = 140; // 0.8秒
+        ballInitSpeed = 10;
+        bombInterval = 150; // 0.8秒
       }
       // ゲームオブジェクト生成
       paddle = new Paddle();
@@ -357,8 +357,8 @@
           }
         }
         // 球の速度を徐々に上げる
-        ball.dx *= 1.0003;
-        ball.dy *= 1.0003;
+        ball.dx *= 1.2;
+        ball.dy *= 1.2;
       });
       // 画面下に落ちた球を除去
       balls = balls.filter(ball => ball.y - ball.radius <= canvas.height);
