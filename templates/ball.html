@@ -297,7 +297,7 @@
         ballInitSpeed = 9;
         bombInterval = 400; // 0.8秒
       } else if (difficulty === "fuck") {
-        ballInitSpeed = 8;
+        ballInitSpeed = 9;
         bombInterval = 140; // 0.8秒
       }
       // ゲームオブジェクト生成
@@ -357,8 +357,8 @@
           }
         }
         // 球の速度を徐々に上げる
-        ball.dx *= 1.0005;
-        ball.dy *= 1.0005;
+        ball.dx *= 1.0003;
+        ball.dy *= 1.0003;
       });
       // 画面下に落ちた球を除去
       balls = balls.filter(ball => ball.y - ball.radius <= canvas.height);
