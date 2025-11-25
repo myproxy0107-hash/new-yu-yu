@@ -88,7 +88,7 @@
     <button id="hardBtn">難しい</button>
     <button id="ultraBtn">超難しい</button>
     <button id="fuckerBtn">鬼難しい</button>
-    
+    <button id="fuckBtn">人間には無理</button>
   </div>
   
   <!-- ゲームキャンバス -->
@@ -115,6 +115,8 @@
     const hardBtn   = document.getElementById("hardBtn");
     const ultraBtn  = document.getElementById("ultraBtn");
     const fuckerBtn   = document.getElementById("fuckerBtn");
+　　　const fuckBtn   = document.getElementById("fuckBtn");
+
     
 
     // キー入力状態管理（PC操作用）
@@ -294,6 +296,9 @@
       } else if (difficulty === "fucker") {
         ballInitSpeed = 9;
         bombInterval = 400; // 0.8秒
+      } else if (difficulty === "fuck") {
+        ballInitSpeed = 14;
+        bombInterval = 350; // 0.8秒
       }
       // ゲームオブジェクト生成
       paddle = new Paddle();
@@ -345,15 +350,15 @@
               balls.push(new Ball(ball.x, ball.y, -ball.dx, ball.dy));
             }
             // ブロック破壊時、30%の確率で爆弾生成
-            if (Math.random() < 0.3) {
+            if (Math.random() < 0.2) {
               bombs.push(new Bomb(block.x + block.width / 2, block.y + block.height / 2));
             }
             break;
           }
         }
         // 球の速度を徐々に上げる
-        ball.dx *= 1.0001;
-        ball.dy *= 1.0001;
+        ball.dx *= 1.005;
+        ball.dy *= 1.005;
       });
       // 画面下に落ちた球を除去
       balls = balls.filter(ball => ball.y - ball.radius <= canvas.height);
@@ -412,6 +417,7 @@
     hardBtn.addEventListener("click", () => startCountdown("hard"));
     ultraBtn.addEventListener("click", () => startCountdown("ultra"));
     fuckerBtn.addEventListener("click", () => startCountdown("fucker"));
+    fuckBtn.addEventListener("click", () => startCountdown("fuck"));
   </script>
 </body>
 </html>
