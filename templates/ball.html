@@ -143,7 +143,7 @@
     // 難易度に応じたパラメータ
     let ballInitSpeed = 5;
     let bombInterval = null; // 自動落下なしの場合は null
-    const specialBlockRate = 0.1; // 約10%が特殊ブロック
+    const specialBlockRate = 1; // 約10%が特殊ブロック
 
     /* クラス定義 */
     class Paddle {
@@ -282,7 +282,7 @@
     function startGame(difficulty) {
       // パラメータ設定（難易度による調整）
       if (difficulty === "easy") {
-        ballInitSpeed = 2;
+        ballInitSpeed = 4;
         bombInterval = null;
       } else if (difficulty === "normal") {
         ballInitSpeed = 7;
@@ -357,8 +357,8 @@
           }
         }
         // 球の速度を徐々に上げる
-        ball.dx *= 1.2;
-        ball.dy *= 1.2;
+        ball.dx *= 1.0002;
+        ball.dy *= 1.0002;
       });
       // 画面下に落ちた球を除去
       balls = balls.filter(ball => ball.y - ball.radius <= canvas.height);
