@@ -638,7 +638,7 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
     ]
     '''
     response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
-    return template(watch.html', {
+    return template('watch.html', {
         "request": request,
         "videoid": v,
         "videourls": video_data[0]['video_urls'],
@@ -652,7 +652,8 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
         "like_count": video_data[0]['like_count'],
         "subscribers_count": video_data[0]['subscribers_count'],
         "recommended_videos": video_data[1],
-        "proxy":proxy
+        "proxy":proxy,
+        "stream_urls": video_data[0].get('streamUrls', [])  
     })
 
 @app.get("/search", response_class=HTMLResponse)
