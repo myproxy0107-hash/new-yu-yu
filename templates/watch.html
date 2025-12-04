@@ -513,13 +513,13 @@
   <div id="defaultPlayer" class="video-player-wrapper">
    <!-- video タグは source を1つだけにする -->
 <video id="player" controls playsinline preload="none">
-  {% if stream_map and resolution_list and resolution_list|length > 0 %}
-    <!-- 初期は最上位解像度の最初のストリームを入れる -->
-    <source src="{{ stream_map[resolution_list[0]][0]['url'] }}">
+  {% if streamUrls and streamUrls|length > 0 %}
+    <source src="{{ streamUrls[0]['url'] }}">
   {% elif videourls and videourls|length > 0 %}
     <source src="{{ videourls[0] }}">
   {% endif %}
 </video>
+
 
 <!-- quality select -->
 <div id="qualityControl" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
