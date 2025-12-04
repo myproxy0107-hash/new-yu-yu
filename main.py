@@ -178,18 +178,26 @@ def getVideoData(videoid):
             audio_url = stream.get("url")
             break
 
+        # --- streamUrls を解像度ごとのリストに整形（複数候補を保持） ---
     adaptive = t.get('adaptiveFormats', [])
-        # --- streamUrls を解像度情報付きで整形 ---
-    adaptive = t.get('adaptiveFormats', [])
-    streamUrls_raw = [
-        {
-            'url': stream.get('url'),
-            'resolution': stream.get('resolution') or stream.get('qualityLabel') or ''
-        }
-        for stream in adaptive
-        if stream.get('url')
-    ]
+    # raw list: each stream may have url, resolution, bitrate, container
+    stream_raw = []
+    for stream in adaptive:
+        url = stream.get('url')
+        if not url:
+            continue
+        res = stream.get('resolution') or stream.get('qualityLabel') or ''
+        # try to get bitrate if present
+        bitrate = stream.get('bitrate') or stream.get('averageBitrate') or 0
+        container = stream.get('container') or ''
+        stream_raw.append({
+            'url': url,
+            'resolution': res,
+            'bitrate': int(bitrate) if isinstance(bitrate, (int, str)) and str(bitrate).isdigit() else 0,
+            'container': container
+        })
 
+    # helper to parse resolution height (e.g., '1080p' -> 1080, '1920x1080' -> 1080)
     def parse_resolution(res_str):
         try:
             if not res_str:
@@ -202,22 +210,24 @@ def getVideoData(videoid):
         except Exception:
             return 0
 
-    # 同じ解像度は最初に見つかった URL を採用
-    res_map = {}
-    for s in streamUrls_raw:
-        rstr = s.get('resolution') or ''
-        if rstr not in res_map and s.get('url'):
-            res_map[rstr] = s['url']
+    # build map: resolution_str -> list of streams (sorted by bitrate desc)
+    stream_map = {}
+    for s in stream_raw:
+        r = s.get('resolution') or ''
+        stream_map.setdefault(r, []).append(s)
 
-    # 高画質順（降順）でリスト化
-    streamUrls = []
-    for rstr, url in sorted(res_map.items(), key=lambda kv: parse_resolution(kv[0]), reverse=True):
-        streamUrls.append({
-            'resolution': rstr,
-            'height': parse_resolution(rstr),
-            'url': url
-        })
+    # sort each resolution's list by bitrate desc (higher bitrate first)
+    for r in stream_map:
+        stream_map[r].sort(key=lambda x: x.get('bitrate', 0), reverse=True)
+
+    # build ordered list of resolution labels (high -> low)
+    resolution_list = sorted(list(stream_map.keys()), key=lambda x: parse_resolution(x), reverse=True)
+
+    # 最終的にテンプレートに渡す形:
+    # stream_map: { "1080p": [ {url, resolution, bitrate, container}, ... ], "720p": [...] }
+    # resolution_list: ["1080p", "720p", "480p", ...]
     # --- ここまで ---
+
 
     return [
       {
