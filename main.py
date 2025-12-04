@@ -606,10 +606,11 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
     })
 
 @app.get('/www', response_class=HTMLResponse)
-def ume_video(v: str, response: Response, request: Request, yuki: Union[str, None] = Cookie(None), proxy: Union[str, None] = Cookie(None)):
-    if not checkCookie(yuki):
+def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
+    # v: video_id
+    if not(checkCookie(yuki)):
         return redirect("/")
-    response.set_cookie("yuki", "True", max_age=7*24*60*60)
+    response.set_cookie(key="yuki", value="True", max_age=7*24*60*60)
     video_data = getVideoData(v)
     '''
     return [
@@ -649,7 +650,7 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
         "length_text": video_data[0]['length_text'],
         "view_count": video_data[0]['view_count'],
         "like_count": video_data[0]['like_count'],
-        "video_urls": video_date[0]['video_urls'],
+        "video_urls": video_data[0]['video_urls'],
         "subscribers_count": video_data[0]['subscribers_count'],
         "recommended_videos": video_data[1],
         "proxy":proxy
