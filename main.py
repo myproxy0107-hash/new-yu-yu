@@ -655,7 +655,7 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
         "subscribers_count": video_data[0]['subscribers_count'],
         "recommended_videos": video_data[1],
         "proxy":proxy,
-      "streamUrls":streamUrls
+      "streamUrls": video_data[0].get('streamUrls', [])
 
     })
 
