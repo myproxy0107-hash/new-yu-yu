@@ -636,69 +636,6 @@ def channel(channelid:str, response: Response, request: Request, yuki: Union[str
     t = getChannelData(channelid)
     return template("channel.html", {"request": request, "results": t[0], "channel_name": t[1]["channel_name"], "channel_icon": t[1]["channel_icon"], "channel_profile": t[1]["channel_profile"], "cover_img_url": t[1]["author_banner"], "subscribers_count": t[1]["subscribers_count"], "proxy": proxy})
 
-def getChannelVideos(channelid: str, page: int = 1, count: int = 20):
-    """
-    page: 1始まり, count: 1ページあたり件数
-    戻り値: {"videos": [...], "has_more": bool}
-    """
-    try:
-        # まず API が limit/page をサポートする想定で試す
-        url_path = f"/channels/{urllib.parse.quote(channelid)}/videos?limit={int(count)}&page={int(page)}"
-        resp = json.loads(requestAPI(url_path, invidious_api.channel))
-        if isinstance(resp, dict) and 'videos' in resp:
-            videos_raw = resp['videos']
-            has_more = bool(resp.get('hasMore', len(videos_raw) >= count))
-        elif isinstance(resp, list):
-            videos_raw = resp
-            has_more = len(videos_raw) >= count
-        else:
-            videos_raw = []
-            has_more = False
-    except Exception:
-        # フォールバック: /channels/{id} から全部取ってスライス
-        try:
-            t = json.loads(requestAPI(f"/channels/{urllib.parse.quote(channelid)}", invidious_api.channel))
-            latest_videos = t.get('latestvideo') or t.get('latestVideos') or []
-            if isinstance(latest_videos, dict):
-                latest_videos = [latest_videos]
-            offset = (page - 1) * count
-            videos_raw = latest_videos[offset: offset + count]
-            has_more = len(latest_videos) > offset + len(videos_raw)
-        except Exception:
-            videos_raw = []
-            has_more = False
-
-    out = []
-    for i in videos_raw:
-        try:
-            vid = i.get("videoId", i.get("id", ""))
-            length_seconds = int(i.get("lengthSeconds", 0) or 0)
-            out.append({
-                "id": vid,
-                "title": i.get("title", ""),
-                "author": i.get("author", ""),
-                "authorId": i.get("authorId", ""),
-                "published": i.get("publishedText", ""),
-                "view_count_text": i.get("viewCountText", "0"),
-                "length_str": str(datetime.timedelta(seconds=length_seconds))
-            })
-        except Exception:
-            continue
-
-    return {"videos": out, "has_more": bool(has_more)}
-
-@app.get("/channel/{channelid}/videos", response_class=JSONResponse)
-def channel_videos_api(channelid: str, page: int = 1, count: int = 20, yuki: Union[str] = Cookie(None)):
-    if not checkCookie(yuki):
-        return JSONResponse(status_code=403, content={"error": "forbidden"})
-    try:
-        page = max(1, int(page))
-        count = max(1, min(100, int(count)))  # 上限を設定
-    except Exception:
-        page, count = 1, 20
-    data = getChannelVideos(channelid, page=page, count=count)
-    return JSONResponse(content=data)
-
 
 
 @app.get("/playlist", response_class=HTMLResponse)
