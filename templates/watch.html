@@ -126,18 +126,6 @@
                     <div class="pure-u-1 pure-u-lg-1-5">
 			 <select id="video1"></select>
 
-<script>
-
-  // 実際に stream.Urls から option タグを動的に生成する例
-  const selectElem = document.getElementById("video1");
-  let optionsHTML = "";
-
-  streamUrls.url.forEach(item => {
-    optionsHTML += `<option value="${item.url}">${item.resolution}</option>`;
-  });
-
-  selectElem.innerHTML = optionsHTML;
-</script>
 
                         <label for="autonextpage">自動で次の動画に遷移<input id="autonextpage" type="checkbox" onchange="changeAutoNextPage(this)"></label><br>
                         <label for="loop">ループ再生<input id="loop" type="checkbox" onchange="changeLoop(this)"></label>
@@ -303,5 +291,75 @@
                 }, delay: 300
             });
         </script>
+			<script>
+(function(){
+  const select = document.getElementById('qualitySelect');
+  const video = document.getElementById('videoPlayer');
+  let hls = null;
+
+  function isHls(url) {
+    return typeof url === 'string' && url.indexOf('.m3u8') !== -1;
+  }
+
+  async function switchSource(url, autoplay = true) {
+    if (!url) return;
+    // HLS の場合は hls.js を使う
+    if (isHls(url) && window.Hls && Hls.isSupported()) {
+      // 既存の hls インスタンスがあれば破棄
+      if (hls) {
+        try { hls.destroy(); } catch(e) {}
+        hls = null;
+      }
+      hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        if (autoplay) {
+          video.play().catch(()=>{});
+        }
+      });
+    } else {
+      // ネイティブ再生（mp4 等）
+      // hls.js を使っていたら破棄
+      if (hls) {
+        try { hls.destroy(); } catch(e) {}
+        hls = null;
+      }
+      // source を差し替え
+      // 既存の <source> を更新するか、新しく作る
+      let srcEl = video.querySelector('source');
+      if (!srcEl) {
+        srcEl = document.createElement('source');
+        video.appendChild(srcEl);
+      }
+      srcEl.src = url;
+      // type は不明なので削除/再設定しない（ブラウザに任せる）
+      video.load();
+      if (autoplay) {
+        video.play().catch(()=>{});
+      }
+    }
+  }
+
+  // 初期化: select の change を監視
+  if (select) {
+    select.addEventListener('change', function(e){
+      const url = e.target.value;
+      switchSource(url, true);
+    });
+  }
+
+  // ページロード時に最初の選択肢を反映（select の最初の option）
+  document.addEventListener('DOMContentLoaded', function(){
+    if (select && select.options.length > 0) {
+      const initialUrl = select.options[0].value;
+      // 既に source が初期化されている場合は何もしないか、明示的に切り替える
+      // switchSource(initialUrl, false);
+    }
+  });
+
+})();
+</script>
+
 </body>
 </html>
