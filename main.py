@@ -695,7 +695,10 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
         "subscribers_count": video_data[0]['subscribers_count'],
         "recommended_videos": video_data[1],
         "proxy":proxy,
-        "stream_urls": video_data[0].get('streamUrls', [])  
+         # 既存の引数に追加
+    "stream_map": video_data[0].get('stream_map', stream_map),   # もし getVideoData 内で直接 stream_map を返すならそれを使う
+    "resolution_list": video_data[0].get('resolution_list', resolution_list)
+
     })
 
 @app.get("/search", response_class=HTMLResponse)
