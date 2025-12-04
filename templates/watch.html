@@ -512,7 +512,12 @@
             <div class="video-player-container">
   <div id="defaultPlayer" class="video-player-wrapper">
     <video id="player" controls playsinline preload="none">
-  <source src="{{ streamUrls[0]['url'] }}">
+  none">
+  {% if streamUrls and streamUrls|length > 0 %}
+    <source src="{{ streamUrls[0]['url'] }}">
+  {% elif videourls and videourls|length > 0 %}
+    <source src="{{ videourls[0] }}">
+  {% endif %}
     </video>
     <div id="loader"></div>
   </div>
