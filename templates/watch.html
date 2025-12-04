@@ -739,6 +739,71 @@
         }, 100);
       })();
     </script>
+<!-- hls.js（HLS 再生対応） -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<script>
+(function(){
+  const select = document.getElementById('qualitySelect');
+  const video = document.getElementById('player');
+  let hls = null;
+
+  function isHls(url) {
+    return typeof url === 'string' && url.indexOf('.m3u8') !== -1;
+  }
+
+  function destroyHls() {
+    if (hls) {
+      try { hls.destroy(); } catch(e) {}
+      hls = null;
+    }
+  }
+
+  function switchSource(url, autoplay = false) {
+    if (!url) return;
+    if (isHls(url) && window.Hls && Hls.isSupported()) {
+      destroyHls();
+      hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        if (autoplay) video.play().catch(()=>{});
+      });
+    } else {
+      destroyHls();
+      // source を差し替えてロード
+      let srcEl = video.querySelector('source');
+      if (!srcEl) {
+        srcEl = document.createElement('source');
+        video.appendChild(srcEl);
+      }
+      srcEl.src = url;
+      video.load();
+      if (autoplay) video.play().catch(()=>{});
+    }
+  }
+
+  if (select) {
+    select.addEventListener('change', function(e){
+      const url = e.target.value;
+      // ユーザー操作による切替なら自動再生を試みる（ブラウザ制限で失敗する場合あり）
+      switchSource(url, true);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // 初期ソースを select の最初に合わせる（自動再生はしない）
+    if (select && select.options.length > 0) {
+      const initialUrl = select.options[0].value;
+      switchSource(initialUrl, false);
+    }
+  });
+
+  window.addEventListener('beforeunload', function(){
+    destroyHls();
+  });
+})();
+</script>
 
     <script>
       $('#searchbox').autocomplete({
