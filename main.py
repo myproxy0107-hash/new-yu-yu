@@ -179,14 +179,46 @@ def getVideoData(videoid):
             break
 
     adaptive = t.get('adaptiveFormats', [])
-    streamUrls = [
+        # --- streamUrls を解像度情報付きで整形 ---
+    adaptive = t.get('adaptiveFormats', [])
+    streamUrls_raw = [
         {
-            'url': stream['url'],
-            'resolution': stream['resolution']
+            'url': stream.get('url'),
+            'resolution': stream.get('resolution') or stream.get('qualityLabel') or ''
         }
         for stream in adaptive
-        if stream.get('container') == 'webm' and stream.get('resolution')
+        if stream.get('url')
     ]
+
+    def parse_resolution(res_str):
+        try:
+            if not res_str:
+                return 0
+            if 'x' in res_str:
+                return int(res_str.split('x')[-1])
+            if res_str.endswith('p'):
+                return int(res_str[:-1])
+            return int(''.join(filter(str.isdigit, res_str)) or 0)
+        except Exception:
+            return 0
+
+    # 同じ解像度は最初に見つかった URL を採用
+    res_map = {}
+    for s in streamUrls_raw:
+        rstr = s.get('resolution') or ''
+        if rstr not in res_map and s.get('url'):
+            res_map[rstr] = s['url']
+
+    # 高画質順（降順）でリスト化
+    streamUrls = []
+    for rstr, url in sorted(res_map.items(), key=lambda kv: parse_resolution(kv[0]), reverse=True):
+        streamUrls.append({
+            'resolution': rstr,
+            'height': parse_resolution(rstr),
+            'url': url
+        })
+    # --- ここまで ---
+
     return [
       {
         # 既存処理（ここでは formatStreams のURLを逆順にして上位2件を使用）
