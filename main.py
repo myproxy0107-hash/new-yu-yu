@@ -179,25 +179,21 @@ def getVideoData(videoid):
             break
 
         # --- streamUrls を解像度ごとのリストに整形（複数候補を保持） ---
+        # --- streamUrls を resolution と url のみで整形 ---
     adaptive = t.get('adaptiveFormats', [])
-    # raw list: each stream may have url, resolution, bitrate, container
     stream_raw = []
     for stream in adaptive:
         url = stream.get('url')
         if not url:
             continue
+        # resolution は API によって 'resolution' や 'qualityLabel' 等で来ることがある
         res = stream.get('resolution') or stream.get('qualityLabel') or ''
-        # try to get bitrate if present
-        bitrate = stream.get('bitrate') or stream.get('averageBitrate') or 0
-        container = stream.get('container') or ''
         stream_raw.append({
-            'url': url,
             'resolution': res,
-            'bitrate': int(bitrate) if isinstance(bitrate, (int, str)) and str(bitrate).isdigit() else 0,
-            'container': container
+            'url': url
         })
 
-    # helper to parse resolution height (e.g., '1080p' -> 1080, '1920x1080' -> 1080)
+    # 重複する resolution があれば最初のものを採用し、高画質順にソート
     def parse_resolution(res_str):
         try:
             if not res_str:
@@ -210,23 +206,20 @@ def getVideoData(videoid):
         except Exception:
             return 0
 
-    # build map: resolution_str -> list of streams (sorted by bitrate desc)
-    stream_map = {}
+    res_map = {}
     for s in stream_raw:
         r = s.get('resolution') or ''
-        stream_map.setdefault(r, []).append(s)
+        if r not in res_map:
+            res_map[r] = s['url']
 
-    # sort each resolution's list by bitrate desc (higher bitrate first)
-    for r in stream_map:
-        stream_map[r].sort(key=lambda x: x.get('bitrate', 0), reverse=True)
-
-    # build ordered list of resolution labels (high -> low)
-    resolution_list = sorted(list(stream_map.keys()), key=lambda x: parse_resolution(x), reverse=True)
-
-    # 最終的にテンプレートに渡す形:
-    # stream_map: { "1080p": [ {url, resolution, bitrate, container}, ... ], "720p": [...] }
-    # resolution_list: ["1080p", "720p", "480p", ...]
+    streamUrls = []
+    for r, url in sorted(res_map.items(), key=lambda kv: parse_resolution(kv[0]), reverse=True):
+        streamUrls.append({
+            'resolution': r,
+            'url': url
+        })
     # --- ここまで ---
+
 
 
     return [
@@ -694,9 +687,7 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
         "like_count": video_data[0]['like_count'],
         "subscribers_count": video_data[0]['subscribers_count'],
         "recommended_videos": video_data[1],
-        "proxy":proxy,
-    "stream_map": video_data[0].get('stream_map', stream_map),   # もし getVideoData 内で直接 stream_map を返すならそれを使う
-    "resolution_list": video_data[0].get('resolution_list', resolution_list)
+        "proxy":proxy
 
     })
 
