@@ -605,7 +605,7 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
         "embed_url": embed_url
     })
 
-@app.get('/ume', response_class=HTMLResponse)
+@app.get('/www', response_class=HTMLResponse)
 def ume_video(v: str, response: Response, request: Request, yuki: Union[str, None] = Cookie(None), proxy: Union[str, None] = Cookie(None)):
     if not checkCookie(yuki):
         return redirect("/")
@@ -637,7 +637,7 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
     ]
     '''
     response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
-    return template('ume.html', {
+    return template(watch.html', {
         "request": request,
         "videoid": v,
         "videourls": video_data[0]['video_urls'],
