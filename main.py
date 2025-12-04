@@ -178,48 +178,14 @@ def getVideoData(videoid):
             audio_url = stream.get("url")
             break
 
-        # --- streamUrls を解像度ごとのリストに整形（複数候補を保持） ---
-        # --- streamUrls を resolution と url のみで整形 ---
-    adaptive = t.get('adaptiveFormats', [])
-    stream_raw = []
-    for stream in adaptive:
-        url = stream.get('url')
-        if not url:
-            continue
-        # resolution は API によって 'resolution' や 'qualityLabel' 等で来ることがある
-        res = stream.get('resolution') or stream.get('qualityLabel') or ''
-        stream_raw.append({
-            'resolution': res,
-            'url': url
-        })
-
-    # 重複する resolution があれば最初のものを採用し、高画質順にソート
-    def parse_resolution(res_str):
-        try:
-            if not res_str:
-                return 0
-            if 'x' in res_str:
-                return int(res_str.split('x')[-1])
-            if res_str.endswith('p'):
-                return int(res_str[:-1])
-            return int(''.join(filter(str.isdigit, res_str)) or 0)
-        except Exception:
-            return 0
-
-    res_map = {}
-    for s in stream_raw:
-        r = s.get('resolution') or ''
-        if r not in res_map:
-            res_map[r] = s['url']
-
-    streamUrls = []
-    for r, url in sorted(res_map.items(), key=lambda kv: parse_resolution(kv[0]), reverse=True):
-        streamUrls.append({
-            'resolution': r,
-            'url': url
-        })
-    # --- ここまで ---
-
+       adaptive = t.get('adaptiveFormats', [])
+    streamUrls = [
+        {
+            'url': stream['url'],
+            'resolution': stream['resolution']
+        }
+        for stream in adaptive
+        if stream.get('container') == 'webm' and stream.get('resolution')
 
 
     return [
@@ -238,7 +204,7 @@ def getVideoData(videoid):
         'view_count': t["viewCount"],
         'like_count': t["likeCount"],
         'subscribers_count': t["subCountText"],
-        'stream_map': stream_maps
+        'streamUrls': streamUrls
     },
 
     [
