@@ -511,30 +511,43 @@
           <div class="video-left">
             <div class="video-player-container">
   <div id="defaultPlayer" class="video-player-wrapper">
-    <video id="player" controls playsinline preload="none">
-  none">
-  {% if streamUrls and streamUrls|length > 0 %}
-    <source src="{{ streamUrls[0]['url'] }}">
+   <!-- video タグは source を1つだけにする -->
+<video id="player" controls playsinline preload="none">
+  {% if stream_map and resolution_list and resolution_list|length > 0 %}
+    <!-- 初期は最上位解像度の最初のストリームを入れる -->
+    <source src="{{ stream_map[resolution_list[0]][0]['url'] }}">
   {% elif videourls and videourls|length > 0 %}
     <source src="{{ videourls[0] }}">
   {% endif %}
+</video>
+
+<!-- 画質（解像度）とその解像度に紐づくストリーム選択 -->
+<div id="qualityControl" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
+  <label for="resolutionSelect">解像度:</label>
+  <select id="resolutionSelect" style="min-width:140px;">
+    {% if resolution_list %}
+      {% for r in resolution_list %}
+        <option value="{{ r }}">{{ r or '自動' }}</option>
+      {% endfor %}
+    {% endif %}
+  </select>
+
+  <label for="variantSelect">ストリーム候補:</label>
+  <select id="variantSelect" style="min-width:220px;">
+    <!-- JS で初期化するためここは空でも可。フォールバックで最初の解像度の候補を埋める -->
+    {% if resolution_list and stream_map %}
+      {% set first = resolution_list[0] %}
+      {% for s in stream_map[first] %}
+        <option value="{{ s['url'] }}" data-bitrate="{{ s['bitrate'] }}" data-container="{{ s['container'] }}">
+          {{ s['container'] }} {{ (s['bitrate'] and (s['bitrate']|int > 0)) and (s['bitrate'] ~ 'bps') or '' }}
+        </option>
+      {% endfor %}
+    {% endif %}
+  </select>
+</div>
+
     </video>
     <div id="loader"></div>
-  </div>
-  <!-- 画質選択（プレーヤー直下） -->
-  <div id="qualityControl" style="margin:8px 0; display:flex; align-items:center; gap:8px;">
-    <label for="qualitySelect" style="font-size:14px;">画質:</label>
-    <select id="qualitySelect" aria-label="画質選択" style="min-width:140px;">
-      {% if streamUrls and streamUrls|length > 0 %}
-        {% for s in streamUrls %}
-          <option value="{{ s['url'] }}" data-res="{{ s['resolution'] }}">{{ s['resolution'] or '自動' }}</option>
-        {% endfor %}
-      {% else %}
-        {% if videourls and videourls|length > 0 %}
-          <option value="{{ videourls[0] }}">デフォルト</option>
-        {% endif %}
-      {% endif %}
-    </select>
   </div>
 
 </div>
