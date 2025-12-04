@@ -66,14 +66,28 @@
                         </form>
                     </div>
                 </div>
-                <div id="player-container" class="h-box">
-                    <video id="player" class="on-video_player video-js player-style-invidious" loadedmetadata="settime()" controls="" playsinline="" loop="" style="outline:none;width:100%;background-color:#000;" poster="{% if proxy == "True" %}/thumbnail?v={{ videoid }}{% else %}https://img.youtube.com/vi/{{ videoid }}/0.jpg{% endif %}">
-                        {% for videourl in videourls%}
-                        <source class="player-source" src="{{ streamUrls }}">
-                        {% endfor %}
-                        <p id="video_info">お使いのブラウザは動画の再生に対応していません。</p>
-                    </video>
-                </div>
+                <!-- 画質選択とプレーヤー -->
+<div id="playerWrapper">
+  <label for="qualitySelect">画質:</label>
+  <select id="qualitySelect" aria-label="画質選択">
+    {% for s in stream_urls %}
+      <option value="{{ s['url'] }}" data-res="{{ s['resolution'] }}">{{ s['resolution'] or '自動' }}</option>
+    {% endfor %}
+  </select>
+
+  <!-- HTML5 video 要素（デフォルトは最初の stream を使う） -->
+  <video id="videoPlayer" controls playsinline style="width:100%; max-width:100%;">
+    {% if stream_urls and stream_urls|length > 0 %}
+      <source src="{{ stream_urls[0]['url'] }}" type="video/mp4">
+    {% else %}
+      <!-- フォールバック: videourls の最初を使う -->
+      <source src="{{ videourls[0] if videourls and videourls|length > 0 else '' }}" type="video/mp4">
+    {% endif %}
+    お使いのブラウザは video タグをサポートしていません。
+  </video>
+</div>
+
+
 		    streamUrls.resolution
                 <div class="h-box">
                     <h1>{{ streamUrls.resolution }}</h1>
