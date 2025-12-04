@@ -518,15 +518,22 @@
     </video>
     <div id="loader"></div>
   </div>
-  <div id="embeddedPlayer" class="umev" style="display: none;">
-    <iframe width="100%" height="100%" 
-            src="https://www.youtube-nocookie.com/embed/{{ videoid }}" 
-            title="video player" frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            referrerpolicy="strict-origin-when-cross-origin" 
-            allowfullscreen>
-    </iframe>
+  <!-- 画質選択（プレーヤー直下） -->
+  <div id="qualityControl" style="margin:8px 0; display:flex; align-items:center; gap:8px;">
+    <label for="qualitySelect" style="font-size:14px;">画質:</label>
+    <select id="qualitySelect" aria-label="画質選択" style="min-width:140px;">
+      {% if streamUrls and streamUrls|length > 0 %}
+        {% for s in streamUrls %}
+          <option value="{{ s['url'] }}" data-res="{{ s['resolution'] }}">{{ s['resolution'] or '自動' }}</option>
+        {% endfor %}
+      {% else %}
+        {% if videourls and videourls|length > 0 %}
+          <option value="{{ videourls[0] }}">デフォルト</option>
+        {% endif %}
+      {% endif %}
+    </select>
   </div>
+
 </div>
 
 
