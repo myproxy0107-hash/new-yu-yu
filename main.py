@@ -404,19 +404,6 @@ def getChannelVideos(channelid: str, page: int = 1, count: int = 20):
 
     return {"videos": out, "has_more": bool(has_more)}
 
-@app.get("/channel/{channelid}/videos", response_class=JSONResponse)
-def channel_videos_api(channelid: str, page: int = 1, count: int = 20, yuki: Union[str] = Cookie(None)):
-    if not checkCookie(yuki):
-        return JSONResponse(status_code=403, content={"error": "forbidden"})
-    try:
-        page = max(1, int(page))
-        count = max(1, min(100, int(count)))  # 上限を設定
-    except Exception:
-        page, count = 1, 20
-    data = getChannelVideos(channelid, page=page, count=count)
-    return JSONResponse(content=data)
-
-
 
 
 def checkCookie(cookie):
@@ -698,6 +685,20 @@ def channel(channelid:str, response: Response, request: Request, yuki: Union[str
     response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
     t = getChannelData(channelid)
     return template("channel.html", {"request": request, "results": t[0], "channel_name": t[1]["channel_name"], "channel_icon": t[1]["channel_icon"], "channel_profile": t[1]["channel_profile"], "cover_img_url": t[1]["author_banner"], "subscribers_count": t[1]["subscribers_count"], "proxy": proxy})
+
+@app.get("/channel/{channelid}/videos", response_class=JSONResponse)
+def channel_videos_api(channelid: str, page: int = 1, count: int = 20, yuki: Union[str] = Cookie(None)):
+    if not checkCookie(yuki):
+        return JSONResponse(status_code=403, content={"error": "forbidden"})
+    try:
+        page = max(1, int(page))
+        count = max(1, min(100, int(count)))  # 上限を設定
+    except Exception:
+        page, count = 1, 20
+    data = getChannelVideos(channelid, page=page, count=count)
+    return JSONResponse(content=data)
+
+
 
 @app.get("/playlist", response_class=HTMLResponse)
 def playlist(list:str, response: Response, request: Request, page:Union[int, None]=1, yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
