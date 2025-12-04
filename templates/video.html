@@ -1041,25 +1041,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ページ読み込み時に cookie に従ってパスを合わせたい場合（任意）
-  // 例えばページに来た時点で cookie が /ume を指定していれば自動で置き換えたい場合は有効にする：
-  (function syncOnLoadFromCookie() {
-    try {
-      const m = document.cookie.match('(^|;)\\s*vc\\s*=\\s*([^;]+)');
-      if (!m) return;
-      const cookieVal = decodeURIComponent(m.pop());
-      const desiredPath = vcToPath(cookieVal);
-      if (window.location.pathname !== desiredPath) {
-        // 注意: 自動置換を有効にしたくない場合はこのブロックを削除またはコメントアウトしてください
-        location.replace(desiredPath + (window.location.search || ''));
-      } else {
-        // もし select があるなら値を同期しておく
-        if (vcSelect) vcSelect.value = cookieVal;
-      }
-    } catch(e){ /* noop */ }
-  })();
 
-});
 </script>
     <script>
 document.addEventListener('DOMContentLoaded', function(){
