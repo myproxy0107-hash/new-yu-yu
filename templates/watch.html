@@ -755,14 +755,20 @@
         }, 100);
       })();
     </script>
-<!-- hls.js（HLS 再生対応） -->
+<!-- hls.js -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <script>
 (function(){
-  const select = document.getElementById('qualitySelect');
+  const resolutionSelect = document.getElementById('resolutionSelect');
+  const variantSelect = document.getElementById('variantSelect');
   const video = document.getElementById('player');
   let hls = null;
+
+  // テンプレートから渡されたデータを JS 側で使えるようにする
+  // stream_map は { "1080p": [ {url, resolution, bitrate, container}, ... ], ... }
+  const streamMap = {{ stream_map | tojson | safe if stream_map is defined else '{}' }};
+  const resolutionList = {{ resolution_list | tojson | safe if resolution_list is defined else '[]' }};
 
   function isHls(url) {
     return typeof url === 'string' && url.indexOf('.m3u8') !== -1;
@@ -775,7 +781,7 @@
     }
   }
 
-  function switchSource(url, autoplay = false) {
+  function setVideoSource(url, autoplay=false) {
     if (!url) return;
     if (isHls(url) && window.Hls && Hls.isSupported()) {
       destroyHls();
@@ -799,27 +805,80 @@
     }
   }
 
-  if (select) {
-    select.addEventListener('change', function(e){
-      const url = e.target.value;
-      // ユーザー操作による切替なら自動再生を試みる（ブラウザ制限で失敗する場合あり）
-      switchSource(url, true);
+  // 指定した解像度の候補を variantSelect に埋める
+  function populateVariantsForResolution(res) {
+    // clear
+    variantSelect.innerHTML = '';
+    const list = streamMap[res] || [];
+    if (list.length === 0) {
+      // フォールバック: videourls があればそれを1つ追加
+      {% if videourls and videourls|length > 0 %}
+      const fallbackUrl = "{{ videourls[0] }}";
+      const opt = document.createElement('option');
+      opt.value = fallbackUrl;
+      opt.textContent = 'デフォルト';
+      variantSelect.appendChild(opt);
+      {% else %}
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = '利用不可';
+      variantSelect.appendChild(opt);
+      {% endif %}
+      return;
+    }
+    list.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.url;
+      const bitrateLabel = s.bitrate && s.bitrate > 0 ? (s.bitrate + 'bps') : '';
+      const containerLabel = s.container || '';
+      opt.textContent = (containerLabel + ' ' + bitrateLabel).trim() || s.url;
+      opt.setAttribute('data-bitrate', s.bitrate || 0);
+      opt.setAttribute('data-container', s.container || '');
+      variantSelect.appendChild(opt);
     });
   }
 
+  // イベント: 解像度が変わったら variant を更新し、最初の候補をセット
+  if (resolutionSelect) {
+    resolutionSelect.addEventListener('change', function(e){
+      const res = e.target.value;
+      populateVariantsForResolution(res);
+      // 自動で最初の候補を再生（ユーザー操作扱いで再生を試みる）
+      if (variantSelect.options.length > 0) {
+        const url = variantSelect.options[0].value;
+        setVideoSource(url, true);
+      }
+    });
+  }
+
+  // イベント: variant を選んだらその URL を再生
+  if (variantSelect) {
+    variantSelect.addEventListener('change', function(e){
+      const url = e.target.value;
+      setVideoSource(url, true);
+    });
+  }
+
+  // 初期化: resolutionSelect の最初を選択して variant を埋める
   document.addEventListener('DOMContentLoaded', function(){
-    // 初期ソースを select の最初に合わせる（自動再生はしない）
-    if (select && select.options.length > 0) {
-      const initialUrl = select.options[0].value;
-      switchSource(initialUrl, false);
+    if (resolutionSelect && resolutionSelect.options.length > 0) {
+      const initialRes = resolutionSelect.options[0].value;
+      populateVariantsForResolution(initialRes);
+      // 初期ソースは variant の最初（自動再生はしない）
+      if (variantSelect.options.length > 0) {
+        setVideoSource(variantSelect.options[0].value, false);
+      }
+    } else {
+      // 解像度情報が無い場合は既存の source をそのまま使う
     }
   });
 
-  window.addEventListener('beforeunload', function(){
-    destroyHls();
-  });
+  // クリーンアップ
+  window.addEventListener('beforeunload', function(){ destroyHls(); });
+
 })();
 </script>
+
 
     <script>
       $('#searchbox').autocomplete({
