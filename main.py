@@ -137,7 +137,12 @@ def getInfo(request):
 
 failed = "Load Failed"
 
-def getVideoData(videoid):
+# --- 動画メタ情報のみを取得（stream を含まない） ---
+def getVideoMeta(videoid):
+    """
+    動画のメタ情報（description, title, author, length, counts, recommended 等）を返す。
+    stream 関連のキーは含めない。
+    """
     t = json.loads(requestAPI(f"/videos/{urllib.parse.quote(videoid)}", invidious_api.video))
 
     # 推奨動画の情報（キー名の違いに対応）
@@ -155,70 +160,119 @@ def getVideoData(videoid):
             "viewCountText": "Load Failed"
         }]
 
-    # 【新規追加】adaptiveFormats から高画質動画と音声の URL を抽出する
-    adaptiveFormats = t.get("adaptiveFormats", [])
+    meta = {
+        'description_html': t.get("descriptionHtml", "").replace("\n", "<br>"),
+        'title': t.get("title", failed),
+        'length_text': str(datetime.timedelta(seconds=t.get("lengthSeconds", 0))),
+        'author_id': t.get("authorId", failed),
+        'author': t.get("author", failed),
+        'author_thumbnails_url': (t.get("authorThumbnails") or [{"url": failed}])[-1].get("url", failed),
+        'view_count': t.get("viewCount", 0),
+        'like_count': t.get("likeCount", 0),
+        'subscribers_count': t.get("subCountText", failed),
+        # 推奨動画はメタ情報として残す（ストリームは含まない）
+        'recommended_videos': [
+            {
+                "video_id": i.get("videoId", failed),
+                "title": i.get("title", failed),
+                "author_id": i.get("authorId", failed),
+                "author": i.get("author", failed),
+                "length_text": str(datetime.timedelta(seconds=i.get("lengthSeconds", 0))),
+                "view_count_text": i.get("viewCountText", "0")
+            } for i in recommended_videos
+        ]
+    }
+
+    return meta
+
+
+# --- ストリーム情報のみを取得する関数 ---
+def getVideoStreams(videoid):
+    """
+    formatStreams / adaptiveFormats など、ストリーム関連のみを返す。
+    返り値の例:
+    {
+      'formatStreams': [...],
+      'adaptiveFormats': [...],
+      'video_urls': [...],         # 従来互換の video_urls（上位2件など）
+      'highstream_url': '...',
+      'audio_url': '...',
+      'streamUrls': [{'url':..., 'resolution':...}, ...]
+    }
+    """
+    t = json.loads(requestAPI(f"/videos/{urllib.parse.quote(videoid)}", invidious_api.video))
+
+    format_streams = t.get("formatStreams", [])
+    adaptive_formats = t.get("adaptiveFormats", [])
+
+    # 従来互換: formatStreams の URL を逆順にして上位2件（存在すれば）
+    video_urls = list(reversed([i.get("url") for i in format_streams if 'url' in i]))[:2]
+
+    # highstream / audio を adaptiveFormats から抽出（既存ロジックを踏襲）
     highstream_url = None
     audio_url = None
 
-    # 高画質: container == 'webm' かつ resolution == '1080p' のストリーム
-    for stream in adaptiveFormats:
+    for stream in adaptive_formats:
         if stream.get("container") == "webm" and stream.get("resolution") == "1080p":
             highstream_url = stream.get("url")
             break
     if not highstream_url:
-        for stream in adaptiveFormats:
+        for stream in adaptive_formats:
             if stream.get("container") == "webm" and stream.get("resolution") == "720p":
                 highstream_url = stream.get("url")
                 break
 
-
-    # 音声: container == 'm4a' かつ audioQuality == 'AUDIO_QUALITY_MEDIUM' のストリーム
-    for stream in adaptiveFormats:
+    for stream in adaptive_formats:
         if stream.get("container") == "m4a" and stream.get("audioQuality") == "AUDIO_QUALITY_MEDIUM":
             audio_url = stream.get("url")
             break
 
-    adaptive = t.get('adaptiveFormats', [])
     streamUrls = [
         {
-            'url': stream['url'],
-            'resolution': stream['resolution']
+            'url': stream.get('url'),
+            'resolution': stream.get('resolution')
         }
-        for stream in adaptive
+        for stream in adaptive_formats
         if stream.get('container') == 'webm' and stream.get('resolution')
     ]
 
-
-    return [
-      {
-        # 既存処理（ここでは formatStreams のURLを逆順にして上位2件を使用）
-        'video_urls': list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
-        # 追加：高画質動画と音声のURL
+    return {
+        'formatStreams': format_streams,
+        'adaptiveFormats': adaptive_formats,
+        'video_urls': video_urls,
         'highstream_url': highstream_url,
         'audio_url': audio_url,
-        'description_html': t["descriptionHtml"].replace("\n", "<br>"),
-        'title': t["title"],
-        'length_text': str(datetime.timedelta(seconds=t["lengthSeconds"])),
-        'author_id': t["authorId"],
-        'author': t["author"],
-        'author_thumbnails_url': t["authorThumbnails"][-1]["url"],
-        'view_count': t["viewCount"],
-        'like_count': t["likeCount"],
-        'subscribers_count': t["subCountText"],
         'streamUrls': streamUrls
-    },
+    }
 
-    [
-      {
-        "video_id": i["videoId"],
-        "title": i["title"],
-        "author_id": i["authorId"],
-        "author": i["author"],
-        "length_text": str(datetime.timedelta(seconds=i["lengthSeconds"])),
-        "view_count_text": i["viewCountText"]
-    } for i in recommended_videos]
-    
-]
+
+# --- 互換性のためのラッパー（従来の getVideoData を置き換える場合） ---
+def getVideoData(videoid):
+    """
+    既存コード互換の戻り値を維持するため、meta と streams を組み合わせて返す。
+    既存の呼び出し箇所は変更不要。
+    """
+    meta = getVideoMeta(videoid)
+    streams = getVideoStreams(videoid)
+
+    # 既存の戻り値形式に合わせる（最初の要素が metadata+stream 関連、2つ目が recommended list）
+    combined_first = {
+        'video_urls': streams.get('video_urls', []),
+        'highstream_url': streams.get('highstream_url'),
+        'audio_url': streams.get('audio_url'),
+        'description_html': meta.get('description_html'),
+        'title': meta.get('title'),
+        'length_text': meta.get('length_text'),
+        'author_id': meta.get('author_id'),
+        'author': meta.get('author'),
+        'author_thumbnails_url': meta.get('author_thumbnails_url'),
+        'view_count': meta.get('view_count'),
+        'like_count': meta.get('like_count'),
+        'subscribers_count': meta.get('subscribers_count'),
+        'streamUrls': streams.get('streamUrls', [])
+    }
+
+    return [combined_first, meta.get('recommended_videos', [])]
 
 def getSearchData(q, page):
 
@@ -513,7 +567,7 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
     if not checkCookie(yuki):
         return redirect("/")
     response.set_cookie("yuki", "True", max_age=7*24*60*60)
-    video_data = getVideoData(v)
+    meta = getVideoMeta(v)
     '''
     return [
         {
@@ -543,7 +597,6 @@ def ume_video(v: str, response: Response, request: Request, yuki: Union[str, Non
     return template('ume.html', {
         "request": request,
         "videoid": v,
-        "videourls": video_data[0]['video_urls'],
         "description": video_data[0]['description_html'],
         "video_title": video_data[0]['title'],
         "author_id": video_data[0]['author_id'],
