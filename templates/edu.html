@@ -559,8 +559,9 @@
                   <img loading="lazy" class="thumbnail" src="{% if proxy == 'True' %}/thumbnail?v={{ rec_video['video_id'] }}{% else %}https://img.youtube.com/vi/{{ rec_video['video_id'] }}/0.jpg{% endif %}" alt="{{ rec_video['title'] }}">
                   <span class="length">{{ rec_video["length_text"] }}</span>
                 </div>
-                <p>{{ rec_video["title"] }}</p>
-              </a> {{ rec_video["view_count_text"] }}回視聴
+                {{ rec_video["title"] }}
+				  {{ rec_video["view_count_text"] }}回視聴
+              </a> 
               <a href="/channel/{{ rec_video['authorId'] }}">{{ rec_video["author"] }}</a>
             </div>
             {% endfor %}
