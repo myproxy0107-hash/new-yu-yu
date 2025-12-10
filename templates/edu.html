@@ -141,102 +141,87 @@
   /* 右カラム内の既存余白を崩さない */
 }
 
-/* 各関連動画アイテム全体を横並びにする（サムネイル左・情報右） */
+/* 関連動画（右カラム）の新しいカスタムレイアウト */
+
+/* 1. 各関連動画アイテム全体をブロック要素として設定 */
 .video-right .recomeention {
+  /* 既存の padding: 6px 4px; border-radius: 8px; は維持 */
   display: block;
   margin-bottom: 12px;
-  padding: 6px 4px;
-  border-radius: 8px;
 }
 
-/* リンク部分をフレックスにして左にサムネ、小さく配置 */
+/* 2. リンク部分をフレックスボックスにし、サムネイルと情報を横並びにする */
 .video-right .recomeention > a {
-  display: flex;
+  display: flex; /* これが横並びを実現 */
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px; /* サムネイルと情報の間のスペース */
   text-decoration: none;
   color: inherit;
   padding: 4px 2px;
 }
 
-/* 内包される .thumbnail（div） の余白やパディングを無効化して小さく調整 */
+/* 3. サムネイル領域 (div.thumbnail) のスタイル定義 */
 .video-right .recomeention > a .thumbnail {
+  /* ご要望に応じて、元の設定より少し大きめのサイズを指定 */
+  width: 160px; /* サムネイル領域の幅 (例: 160px) */
+  flex: 0 0 160px; /* 幅を固定し、縮小しない */
+  height: 90px; /* 16:9 比率 (160 * 9 / 16 = 90px) */
   padding: 0 !important;
-  width: 120px;          /* サムネイル領域の幅（調整可） */
-  flex: 0 0 120px;
   box-sizing: border-box;
   position: relative;
-  height: 67.5px;        /* 16:9 比率（120 * 9 / 16 = 67.5） */
   overflow: hidden;
   border-radius: 6px;
   background: #000;
 }
 
-/* 実際の img.thumbnail をサムネイル領域に馴染ませる */
+/* 4. サムネイル画像 (img.thumbnail) のスタイル */
 .video-right .recomeention > a .thumbnail img.thumbnail {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 7px;
+  border-radius: 6px;
 }
 
-/* サムネイル上の長さ表示（.length）がある場合の位置調整 */
-.video-right .recomeention > a .thumbnail .length {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  background: rgba(0,0,0,0.75);
-  color: #fff;
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  line-height: 1;
+/* 5. 右側の情報コンテナのスタイル */
+.video-right .recomeention .info-container {
+    /* サムネの右側の情報を収めるためのコンテナを仮定 */
+    flex-grow: 1; /* 残りのスペースを全て使用 */
+    min-width: 0; /* フレックスアイテムとしてテキストが溢れるのを防ぐ */
 }
 
-/* 右側メタ領域（タイトルとその下の情報） */
-.video-right .recomeention > a p,
-.video-right .recomeention > a .meta {
-  margin: 0;
-  padding: 0;
-}
-
-/* タイトル（a の直下の p 要素） */
+/* 6. タイトル（p 要素）のスタイル */
 .video-right .recomeention > a p {
-  font-size: 0.95rem;
+  font-size: 1.0rem; /* タイトルを少し大きく */
   font-weight: 600;
-  color: var(--yt-spec-text-primary, #0f0f0f);
-  line-height: 1.2;
+  line-height: 1.3;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2; /* 最大2行で省略 */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
-  min-width: 0; /* テキスト省略を効かせるため */
+  margin: 0; /* 不要なマージンをリセット */
 }
 
-/* タイトルの下にある視聴回数とチャンネルリンクは .recomeention 内の p, a 要素として存在するので微調整 */
+/* 7. チャンネル名と視聴回数（a + p, p 要素）のスタイル */
+/* HTML構造上、これらはリンク要素の外にあるため、配置を調整する必要がある */
 .video-right .recomeention > p,
-.video-right .recomeention > a + p,
 .video-right .recomeention > a + p + a {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: var(--yt-spec-text-secondary, #606060);
-  margin: 6px 0 0 0;
+  margin: 4px 0 0 172px; /* 160px(サムネ幅) + 12px(gap) = 172px のインデントでサムネ右に配置 */
+  display: block;
+}
+.video-right .recomeention > a + p + a {
+  margin-top: 0;
 }
 
-/* チャンネルリンク（下段の a） */
-.video-right .recomeention > a + p + a {
-  color: var(--yt-spec-text-secondary, #606060);
-  text-decoration: none;
-}
-
-/* ホバー時の視覚効果（リンク全体に限定） */
+/* ホバー時の視覚効果 */
 .video-right .recomeention > a:hover {
   background: rgba(0,0,0,0.03);
   border-radius: 8px;
 }
-
 		
   .video-right .recomeention > a p {
     font-size: 0.92rem;
