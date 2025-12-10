@@ -178,7 +178,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 6px;
+  border-radius: 7px;
 }
 
 /* サムネイル上の長さ表示（.length）がある場合の位置調整 */
@@ -237,13 +237,7 @@
   border-radius: 8px;
 }
 
-/* モバイル調整：狭い領域ではサムネを少し小さくして行間を詰める */
-@media (max-width: 520px) {
-  .video-right .recomeention > a .thumbnail {
-    width: 96px;
-    flex: 0 0 96px;
-    height: 54px;
-  }
+		
   .video-right .recomeention > a p {
     font-size: 0.92rem;
     -webkit-line-clamp: 2;
@@ -566,8 +560,7 @@
                   <span class="length">{{ rec_video["length_text"] }}</span>
                 </div>
                 <p>{{ rec_video["title"] }}</p>
-              </a>
-              <p>{{ rec_video["view_count_text"] }}回視聴</p>
+              </a> {{ rec_video["view_count_text"] }}回視聴
               <a href="/channel/{{ rec_video['authorId'] }}">{{ rec_video["author"] }}</a>
             </div>
             {% endfor %}
