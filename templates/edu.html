@@ -210,7 +210,7 @@
 .video-right .recomeention > a + p + a {
   font-size: 0.85rem;
   color: var(--yt-spec-text-secondary, #606060);
-  margin: 4px 0 0 172px; /* 160px(サムネ幅) + 12px(gap) = 172px のインデントでサムネ右に配置 */
+  margin: 0 0 0 172px; /* 160px(サムネ幅) + 12px(gap) = 172px のインデントでサムネ右に配置 */
   display: block;
 }
 .video-right .recomeention > a + p + a {
@@ -544,9 +544,9 @@
                   <img loading="lazy" class="thumbnail" src="{% if proxy == 'True' %}/thumbnail?v={{ rec_video['video_id'] }}{% else %}https://img.youtube.com/vi/{{ rec_video['video_id'] }}/0.jpg{% endif %}" alt="{{ rec_video['title'] }}">
                   <span class="length">{{ rec_video["length_text"] }}</span>
                 </div>
-                <p>{{ rec_video["title"] }}</p>
-   <br> {{ rec_video["view_count_text"] }}回視聴
-              <a href="/channel/{{ rec_video['authorId'] }}">{{ rec_video["author"] }}</a></a> 
+                <p>{{ rec_video["title"] }}</p></a>
+   <p> {{ rec_video["view_count_text"] }}回視聴</p>
+              <a href="/channel/{{ rec_video['authorId'] }}">{{ rec_video["author"] }}</a> 
             </div>
             {% endfor %}
           </div>
