@@ -14,142 +14,97 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
     <style>
-         .contents #searchbox {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            text-align: right;
-            z-index: 20;
-            color: #ffffff;
-        }
-        #topButton {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #007BFF;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #topButton:hover {
-            background-color: #0056b3;
-        }
-        #topButton:active {
-            transform: scale(0.95);
-            background-color: #ff6347;
-        }
+/* === 全体リセット（上書き優先） === */
+* { box-sizing: border-box; }
 
-        /* vc selector style */
-        #vcSelect {
-            margin-left: 8px;
-            padding: 6px 10px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            background: #fff;
-            cursor: pointer;
-        }
-        #vcStatus { font-size: 0.9em; margin-left: 8px; vertical-align: middle; }
+/* 検索エリア（上書き） */
+.search-box,
+.search-container,
+#search-box {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 14px 18px !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  font-size: 16px !important;
+  width: 100% !important;
+}
 
-        /* ---------- settings panel (overlay) ---------- */
-        /* gear moved to left-bottom */
-        .settings-toggle {
-          position: fixed;
-          left: 18px;
-          bottom: 18px;
-          z-index: 140;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          font-size: 20px;
-          color: #fff;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .settings-toggle .gear {
-          width: 44px;
-          height: 44px;
-          border-radius: 10px;
-          background: rgba(0,0,0,0.55);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-          color: #fff;
-          font-size: 20px;
-        }
-        .settings-panel {
-          position: fixed;
-          bottom: 78px;
-          left: 18px;
-          width: 320px;
-          max-width: calc(100% - 36px);
-          background: #ffffff;
-          border-radius: 12px;
-          box-shadow: 0 14px 40px rgba(0,0,0,0.18);
-          padding: 16px;
-          z-index: 139;
-          transform-origin: bottom left;
-          transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
-          opacity: 0;
-          transform: translateY(10px) scale(.98);
-          pointer-events: none;
-        }
-        .settings-panel.open {
-          transform: translateY(0) scale(1);
-          opacity: 1;
-          pointer-events: auto;
-        }
-        .settings-panel h4 { margin: 0 0 10px; font-size: 1rem; color: #222; }
-        .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
-        .settings-row:last-child { border-bottom: none; }
-        .settings-row label { font-size: 0.92rem; color: #333; }
-        .settings-row .desc { font-size: 0.8rem; color: #666; display:block; margin-top:6px; }
+/* 検索入力フィールド */
+.search-box input[type="search"],
+.search-box input[type="text"],
+.search-input {
+  flex: 1 !important;
+  border: 0 !important;
+  outline: none !important;
+  font-size: 16px !important;
+  background: transparent !important;
+  padding: 6px 8px !important;
+}
 
-        /* ---------- toast (notification) ---------- */
-        .toast-wrap {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          z-index: 150;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          pointer-events: none;
-        }
-        .toast {
-          min-width: 220px;
-          max-width: 360px;
-          background: linear-gradient(180deg,#fff,#f6f9ff);
-          border-radius: 10px;
-          padding: 12px 14px;
-          box-shadow: 0 10px 30px rgba(14,30,37,0.12);
-          color: #042a4a;
-          font-size: 0.95rem;
-          border-left: 4px solid #007BFF;
-          transform: translateX(12px) translateY(-8px) scale(.98);
-          opacity: 0;
-          transition: transform 300ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease;
-          pointer-events: auto;
-          touch-action: pan-y;
-          user-select: none;
-        }
-        .toast.show { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
-        .toast .title { font-weight: 700; margin-bottom: 6px; }
-        .toast .body { font-weight: 500; color: #234; }
-        .toast.dragging { transition: none; opacity: 0.95; }
-        .toast .close-x { position: absolute; top: 6px; right: 8px; font-weight: 700; color: rgba(0,0,0,0.45); cursor: pointer; }
-        .toast .hint { margin-top: 8px; font-size: 0.78rem; color: #556; display:block; }
+/* 動画グリッド：3列に固定（上書き） */
+.video-grid,
+.videos,
+.video-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 16px !important;
+  align-items: start !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
 
-    </style>
+/* 各動画カードを1区切りに */
+.video-card,
+.video-item,
+.card {
+  background: #fff !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* サムネイル */
+.video-thumb,
+.video-card img,
+.card img {
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  aspect-ratio: 16/9 !important;
+  object-fit: cover !important;
+}
+
+/* タイトル：最大2行で省略 */
+.video-title,
+.card .title,
+.video-card h3 {
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 2 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.4 !important;
+  max-height: calc(1.4em * 2) !important;
+  font-size: 14px !important;
+  margin: 8px 12px 12px !important;
+  color: #111 !important;
+  word-break: break-word !important;
+}
+
+/* レスポンシブ */
+@media (max-width: 900px) {
+  .video-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 600px) {
+  .video-grid { grid-template-columns: 1fr !important; }
+  .search-box { padding: 12px !important; font-size: 15px !important; }
+}
+</style>
 </head>
 <body>
 <header id="top-bar">
