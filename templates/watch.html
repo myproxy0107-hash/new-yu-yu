@@ -519,16 +519,15 @@
     <source src="{{ videourls[0] }}">
   {% endif %}
 </video>
-
+ 
 
 <div id="qualityControl" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
   <label for="qualitySelect">画質:</label>
   <select id="qualitySelect" style="min-width:140px;">
-    {% if streamUrls and streamUrls|length > 0 %}
-      {% for s in streamUrls %}
-        <option value="{{ s['url'] }}">{{ s['resolution'] or '自動' }}</option>
+    {% if streamUrls and streamUrls %}
+      {% for stream in streamUrls %}
+        <option value="{{ stream.url }}">{{ stream.resolution }}</option>
       {% endfor %}
-    {% else %}
   </select>
 </div>
     <div id="loader"></div>
