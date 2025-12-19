@@ -529,10 +529,6 @@
         <option value="{{ s['url'] }}">{{ s['resolution'] or '自動' }}</option>
       {% endfor %}
     {% else %}
-      {% if videourls and videourls|length > 0 %}
-        <option value="{{ videourls[0] }}">デフォルト</option>
-      {% endif %}
-    {% endif %}
   </select>
 </div>
     <div id="loader"></div>
