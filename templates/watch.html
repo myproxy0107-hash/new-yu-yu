@@ -513,10 +513,8 @@
   <div id="defaultPlayer" class="video-player-wrapper">
    <!-- video タグは source を1つだけにする -->
 <video id="player" controls playsinline preload="none">
-  {% if streamUrls and streamUrls|length > 0 %}
+  {% if streamUrls and streamUrls %}
     <source src="{{ streamUrls[0]['url'] }}">
-  {% elif videourls and videourls|length > 0 %}
-    <source src="{{ videourls[0] }}">
   {% endif %}
 </video>
  
@@ -524,10 +522,15 @@
 <div id="qualityControl" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
   <label for="qualitySelect">画質:</label>
   <select id="qualitySelect" style="min-width:140px;">
-    {% if streamUrls and streamUrls %}
-      {% for stream in streamUrls %}
-        <option value="{{ stream.url }}">{{ stream.resolution }}</option>
+ {% if streamUrls and streamUrls %}
+      {% for s in streamUrls %}
+        <option value="{{ s['url'] }}">{{ s['resolution'] }}</option>
       {% endfor %}
+    {% else %}
+      {% if videourls and videourls %}
+        <option value="{{ videourls[0] }}">デフォルト</option>
+      {% endif %}
+    {% endif %}
   </select>
 </div>
     <div id="loader"></div>
