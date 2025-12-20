@@ -512,11 +512,11 @@
             <div class="video-player-container">
   <div id="defaultPlayer" class="video-player-wrapper">
    <!-- video タグは source を1つだけにする -->
-<iframe id="player" controls playsinline preload="none">
+<video id="player" controls playsinline preload="none">
   {% if streamUrls and streamUrls %}
     <source src="{{ streamUrls[0]['url'] }}">
   {% endif %}
-</iframe>
+</video>
  
 
 <div id="qualityControl" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
