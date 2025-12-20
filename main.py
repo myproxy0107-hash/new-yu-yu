@@ -205,6 +205,7 @@ def getVideoData(videoid):
         'author_thumbnails_url': t["authorThumbnails"][-1]["url"],
         'view_count': t["viewCount"],
         'like_count': t["likeCount"],
+        'published': t["published"],
         'subscribers_count': t["subCountText"],
         'streamUrls': streamUrls
     },
@@ -216,7 +217,8 @@ def getVideoData(videoid):
         "author_id": i["authorId"],
         "author": i["author"],
         "length_text": str(datetime.timedelta(seconds=i["lengthSeconds"])),
-        "view_count_text": i["viewCountText"]
+        "view_count_text": i["viewCountText"],
+        "published" : i["published"]
     } for i in recommended_videos]
     
 ]
