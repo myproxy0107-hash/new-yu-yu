@@ -565,8 +565,7 @@
                 </div>
                 <p>{{ rec_video["title"] }}</p>
               </a>
-              <p class="video-data" dir="auto">{{ rec_video["view_count_text"] }}回視聴 {{ rec_video["published"] }}</p>
-              <a href="/channel/{{ rec_video["authorId"] }}">{{ rec_video["author"] }}</a>
+              <a href="/channel/{{ rec_video["authorId"] }}">{{ rec_video["author"] }}</a><div class="video-data" dir="auto">&#9776; &#9776; &#9776; {{ rec_video["view_count_text"] }}回視聴{{ rec_video["published"] }}</div>
             </div>
             {% endfor %}
           </div>
