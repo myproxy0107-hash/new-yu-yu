@@ -512,7 +512,7 @@ def video(v:str, response: Response, request: Request, yuki: Union[str] = Cookie
 def ume_video(v: str, response: Response, request: Request, yuki: Union[str, None] = Cookie(None), proxy: Union[str, None] = Cookie(None)):
     if not checkCookie(yuki):
         return redirect("/")
-    response.set_cookie("yuki", "True", max_age=7*24*60*60)
+    response.set_cookie("yuki", "True", max_age=17*24*60*60)
     video_data = getVideoData(v)
     '''
     return [
