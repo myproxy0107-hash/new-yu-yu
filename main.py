@@ -152,7 +152,7 @@ def getVideoData(videoid):
             "authorId": failed,
             "author": failed,
             "lengthSeconds": 0,
-            "published" : 0,
+            "published" : failed,
             "viewCountText": "Load Failed"
         }]
 
