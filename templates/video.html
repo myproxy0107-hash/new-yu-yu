@@ -506,7 +506,7 @@
       <!-- メインコンテンツ -->
       <main class="main-content">
         <div class="video-container">
-          <!-- 左カラム：動画プレーヤーとその下に動画説明、コメント -->
+          <!-- 左は動画プレーヤーとその下に動画説明、コメント -->
           <div class="video-left">
             <div class="video-player-container">
   <div id="defaultPlayer" class="video-player-wrapper">
@@ -553,7 +553,7 @@
               <div id="comments"></div>
             </div>
           </div>
-          <!-- 右カラム：関連動画 -->
+          <!-- 右は関連動画 -->
           <div class="video-right">
             {% for rec_video in recommended_videos %}
             <div class="recomeention">
@@ -564,8 +564,8 @@
                 </div>
                 <p>{{ rec_video["title"] }}</p>
               </a>
-              <a href="/channel/{{ rec_video["authorId"] }}">{{ rec_video["author"] }}</a><div class="video-data" dir="auto">{{ rec_video["view_count_text"] }}回視聴&emsp;&emsp;&emsp;{{ rec_video["published"] }}</div>
-            </div>
+              <a href="/channel/{{ rec_video["authorId"] }}">{{ rec_video["author"] }}</a><div class="video-data" dir="auto">{{ rec_video["view_count_text"] }}回視聴&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{{ rec_video["published"] }}</div>
+            </div><!-- 主はバカなので&emsp;を使って、空白をゴリ押しで使えるようにしています、はい、バカですね(-->
             {% endfor %}
           </div>
         </div>
