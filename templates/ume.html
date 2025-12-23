@@ -505,17 +505,28 @@
     <div class="no-theme">
       <!-- メインコンテンツ -->
       <main class="main-content">
-    <div class="video-container">
-      <!-- 左カラム：動画プレーヤーとその下に動画説明、コメント -->
-      <div class="video-left">
-        <div class="video-player-container">
-          <div class="video-player-wrapper">
-            <div class="umev">
-                   <iframe width="100%" height="100%" src="{{embed_url}}"  title="video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-                </div>
-		  <div id="loader"></div>
-          </div>
-        </div>
+        <div class="video-container">
+          <!-- 左は動画プレーヤーとその下に動画説明、コメント -->
+          <div class="video-left">
+            <div class="video-player-container">
+  <div id="defaultPlayer" class="video-player-wrapper">
+    <video id="player" controls playsinline preload="none">
+      {% for videourl in videourls %}
+        <source class="player-source" src="{{ videourl }}">
+      {% endfor %}
+    </video>
+    <div id="loader"></div>
+  </div>
+  <div id="embeddedPlayer" class="umev" style="display: none;">
+    <iframe width="100%" height="100%" 
+            src="https://www.youtube-nocookie.com/embed/{{ videoid }}" 
+            title="video player" frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            referrerpolicy="strict-origin-when-cross-origin" 
+            allowfullscreen>
+    </iframe>
+  </div>
+</div>
 
 
             <!-- 動画の説明 -->
@@ -546,7 +557,7 @@
           <div class="video-right">
             {% for rec_video in recommended_videos %}
             <div class="recomeention">
-              <a href="/edu?v={{ rec_video['video_id'] }}">
+              <a href="/watch?v={{ rec_video['video_id'] }}">
                 <div class="thumbnail">
                   <img loading="lazy" class="thumbnail" src="{% if proxy == 'True' %}/thumbnail?v={{ rec_video['video_id'] }}{% else %}https://img.youtube.com/vi/{{ rec_video['video_id'] }}/0.jpg{% endif %}" alt="{{ rec_video['title'] }}">
                   <span class="length">{{ rec_video["length_text"] }}</span>
