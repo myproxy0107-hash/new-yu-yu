@@ -135,6 +135,43 @@
     </nav>
   </header>
 	    <br>
+		 <button class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
+      <span class="gear">設定⚙️</span>
+    </button>
+
+    <!-- 設定パネル（歯車の上に立ち上がる） -->
+    <div class="settings-panel" id="settingsPanel" role="dialog" aria-hidden="true" aria-labelledby="settingsTitle">
+      <h4 id="settingsTitle">表示と再生の設定</h4>
+
+      <div class="settings-row">
+        <div>
+          <label for="vcSelectPanel">再生モード</label>
+          <div class="desc">リンク先を選択できます。設定はクッキーで保存されます。</div>
+        </div>
+        <div>
+          <select id="vcSelectPanel" style="min-width:120px;">
+         <option value="1">stream再生</option>
+        <option value="2">高画質再生</option>
+        <option value="3">nocookie</option>
+        <option value="0">education</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <label for="proxyToggle">サムネイルプロキシ</label>
+          <div class="desc">プロキシによるサムネイル取得をオンにします（クッキーで保存）</div>
+        </div>
+        <div>
+          <input id="proxyToggle" type="checkbox" />
+        </div>
+      </div>
+
+      <div style="padding-top:10px; text-align:right;">
+        <button id="settingsSaveBtn" style="padding:8px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#007BFF; color:#fff; cursor:pointer;">保存</button>
+      </div>
+    </div>
         <div  class="no-theme">
         <span id="dark_mode_pref" style="display:none"></span>
         <div class="pure-g">
